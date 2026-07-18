@@ -1,0 +1,3 @@
+Rugged Explorer biped models (Walking / Idle_02 / Chair_Sit_Idle_M / Running / Lean_Forward_Sprint / Two_Handed_Parry / Character_output)
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0
+Attribution: Meshy AI, 'Rugged Explorer biped'

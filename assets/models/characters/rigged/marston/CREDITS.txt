@@ -1,0 +1,3 @@
+Gentleman in a Cream biped models (Walking / Casual_Walk / Idle_3 / Sitting_Answering_Questions / Dead / Running / Lean_Forward_Sprint / Character_output)
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0
+Attribution: Meshy AI, 'Gentleman in a Cream biped'

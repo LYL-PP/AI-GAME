@@ -62,11 +62,12 @@ export class ChapterManager {
     return true;
   }
 
-  // 第 1 章：当众呛咳
+  // 第 1 章：当众呛咳（骨骼模型走 Dead clip；旧模型走 choke 反应）
   _eventMarston() {
     this.state = 'event';
-    this.eventStep = { kind: 'marston', t: 0 };
+    this.eventStep = { kind: 'marston', t: 0, deadStarted: false };
     const m = this.mgr.get('marston');
+    if (m?.rigged && m.rigCfg?.death) return; // 由 _updateEvent 按节奏触发
     m?.playReaction('choke', 2.6);
   }
 
@@ -231,20 +232,30 @@ export class ChapterManager {
     const ev = this.eventStep;
     ev.t += dt;
     if (ev.kind === 'marston') {
-      if (ev.t > 2.6 && !ev.fell) {
+      const m = this.mgr.get('marston');
+      const useRig = m?.rigged && m.rigCfg?.death;
+      // 举杯停顿半拍 → Dead clip 倒地（骨骼）/ choke 反应（旧模型）
+      if (useRig && ev.t > 0.5 && !ev.deadStarted) {
+        ev.deadStarted = true;
+        m.rigged.play(m.rigCfg.death, { loop: false, fade: 0.15, timeScale: 1.0 });
+        window.AudioAPI?.play?.('choking');
+      }
+      const fellAt = useRig ? 3.2 : 2.6;
+      if (ev.t > fellAt && !ev.fell) {
         ev.fell = true;
-        const m = this.mgr.get('marston');
-        if (m) {
+        if (m && !useRig) {
           m.pos.set(9.0, F1, 4.0);
           m.group.position.set(9.0, F1, 4.0);
           m.setDeadPose('prone');
+        } else if (m) {
+          m.setDeadPose('prone'); // rigged：走 death clip 定格
         }
         for (const n of this.mgr.npcs.values()) {
           if (!n.dead && !n.removed && n.id !== 'marston' && Math.hypot(n.pos.x - 9, n.pos.z - 4) < 9)
             n.playReaction('tremble', 4);
         }
       }
-      if (ev.t > 4.2) this.state = 'await';
+      if (ev.t > (useRig ? 5.0 : 4.2)) this.state = 'await';
     } else if (ev.kind === 'lombard') {
       if (ev.t > 2.2 && !ev.shot) {
         ev.shot = true;

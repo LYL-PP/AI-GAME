@@ -4,6 +4,55 @@ import { lam, textTexture } from '../world/props.js';
 import { KenneyLib } from './kenney.js';
 import { RiggedActor } from './rigged.js';
 
+// 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
+const RIGGED_DEFS = {
+  wargrave: {
+    dir: 'assets/models/characters/rigged/wargrave/',
+    files: {
+      walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
+      running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
+      injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
+      dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
+    },
+    idle: 'walking', idleTS: 0.12, walk: 'walking', walkTS: 1.0, sit: null, death: 'dying',
+  },
+  marston: {
+    dir: 'assets/models/characters/rigged/marston/',
+    files: {
+      Casual_Walk: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Casual_Walk_withSkin.glb',
+      Idle_3: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Idle_3_withSkin.glb',
+      Sitting_Answering_Questions: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Sitting_Answering_Questions_withSkin.glb',
+      Dead: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Dead_withSkin.glb',
+      Running: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Running_withSkin.glb',
+      Lean_Forward_Sprint: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Lean_Forward_Sprint_inplace_withSkin.glb',
+    },
+    idle: 'Idle_3', idleTS: 1.0, walk: 'Casual_Walk', walkTS: 1.0,
+    sit: 'Sitting_Answering_Questions', death: 'Dead',
+  },
+  vera: {
+    dir: 'assets/models/characters/rigged/vera/',
+    files: {
+      Walking_Woman: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Walking_Woman_withSkin.glb',
+      Idle_12: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Idle_12_withSkin.glb',
+      Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+      Running: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Running_withSkin.glb',
+    },
+    idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_F', death: null,
+  },
+  lombard: {
+    dir: 'assets/models/characters/rigged/lombard/',
+    files: {
+      Walking: 'Meshy_AI_Rugged_Explorer_biped_Animation_Walking_withSkin.glb',
+      Idle_02: 'Meshy_AI_Rugged_Explorer_biped_Animation_Idle_02_withSkin.glb',
+      Chair_Sit_Idle_M: 'Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
+      Running: 'Meshy_AI_Rugged_Explorer_biped_Animation_Running_withSkin.glb',
+    },
+    idle: 'Idle_02', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_M', death: null,
+  },
+};
+
 const MAT_V = new THREE.MeshLambertMaterial({ vertexColors: true });
 
 // 给几何体填充纯色（合并后单网格多色）
@@ -168,8 +217,9 @@ export class NPC {
     this.spec = { ...SPECS[def.id], name: def.name };
     // Kenney 方块人物（characters.json modelHint.kenney 数据驱动）；失败退回程序化模型
     const kid = def.modelHint?.kenney;
-    if (def.id === 'wargrave' && kenneyLib?.riggedWargrave) {
-      const rig = kenneyLib.riggedWargrave;
+    if (RIGGED_DEFS[def.id] && kenneyLib?.rigged?.[def.id]) {
+      const rig = kenneyLib.rigged[def.id];
+      this.rigCfg = RIGGED_DEFS[def.id];
       this.kenney = true;
       this.rigged = rig;
       rig.group.visible = true;
@@ -180,7 +230,7 @@ export class NPC {
       this.head = new THREE.Group();
       this.armL = new THREE.Group();
       this.armR = new THREE.Group();
-      rig.play('walking', { timeScale: 0.12 });
+      rig.play(this.rigCfg.idle, { timeScale: this.rigCfg.idleTS });
       const label = new THREE.Sprite(new THREE.SpriteMaterial({
         map: textTexture([def.name], { w: 256, h: 80, bg: 'rgba(20,18,16,0.55)', fg: '#e8ddc9', border: 'rgba(217,142,74,0.0)', fontMain: 46 }),
         transparent: true, depthWrite: false,
@@ -276,14 +326,19 @@ export class NPC {
 
     // 行走由 schedule 驱动位移；这里只播动画
     if (this.rigged) {
+      const rc = this.rigCfg;
       this.rigged.update(dt);
+      // 死亡 clip 播放期间不干预（否则会被待机分支覆盖）
+      if (this.dead || this.rigged.currentName === rc.death) return;
       if (this.walking) {
-        if (this.rigged.currentName !== 'walking') this.rigged.play('walking', { timeScale: 1.0 });
-        else this.rigged.current.action.timeScale = 1.0;
-      } else if (this.rigged.currentName !== 'walking') {
-        this.rigged.play('walking', { timeScale: 0.12 });
-      } else if (!this.seated) {
-        this.rigged.current.action.timeScale = 0.12;
+        if (this.rigged.currentName !== rc.walk) this.rigged.play(rc.walk, { timeScale: rc.walkTS });
+        else this.rigged.current.action.timeScale = rc.walkTS;
+      } else if (this.seated && rc.sit) {
+        if (this.rigged.currentName !== rc.sit) this.rigged.play(rc.sit, { timeScale: 0.6 });
+      } else if (this.rigged.currentName !== rc.idle) {
+        this.rigged.play(rc.idle, { timeScale: rc.idleTS });
+      } else {
+        this.rigged.current.action.timeScale = rc.idleTS;
       }
       return;
     }
@@ -422,9 +477,10 @@ export class NPC {
     this.deadPose = type;
     this.walking = false;
     this.reaction = null;
-    if (this.rigged && this.rigged.has('dying')) {
-      // dying_backwards 末帧定格（组变换不再叠加）
-      this.rigged.play('dying', { loop: false, fade: 0.2, timeScale: 1.0 });
+    const deathClip = this.rigged && this.rigCfg?.death;
+    if (deathClip && this.rigged.has(deathClip)) {
+      // 死亡 clip 末帧定格（已在播放则不重启；组变换不再叠加）
+      if (this.rigged.currentName !== deathClip) this.rigged.play(deathClip, { loop: false, fade: 0.2, timeScale: 1.0 });
       return;
     }
     const g = this.group;
@@ -466,23 +522,21 @@ export class NPCManager {
   static async create(scene, characters) {
     const kids = characters.map((c) => c.modelHint?.kenney).filter(Boolean);
     const lib = await KenneyLib.load(kids);
-    // 沃格雷夫日常骨骼模型（立绘平面投影贴图；夜奔段另有黑化剪影实例，互不影响）
-    try {
-      const rig = await RiggedActor.load('assets/models/characters/rigged/wargrave/', {
-        walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
-        running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
-        injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
-        dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
-      }, { tint: 0x1a1a20 });
-      const tex = new THREE.TextureLoader().load('assets/models/characters/rigged/wargrave/tex_fullbody.jpg');
-      tex.flipY = false;
-      tex.colorSpace = THREE.SRGBColorSpace;
-      rig.applyPortraitProjection(tex, { marginX: 0.12 });
-      rig.group.visible = false;
-      scene.add(rig.group);
-      lib.riggedWargrave = rig;
-    } catch (e) {
-      console.warn('[rigged wargrave] 日常骨骼加载失败，退回 kenney 模型', e);
+    // 骨骼动画角色（立绘平面投影贴图；夜奔段另有黑化剪影实例，互不影响）
+    lib.rigged = {};
+    for (const [id, def] of Object.entries(RIGGED_DEFS)) {
+      try {
+        const rig = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20 });
+        const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
+        tex.flipY = false;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        rig.applyPortraitProjection(tex, { marginX: 0.12 });
+        rig.group.visible = false;
+        scene.add(rig.group);
+        lib.rigged[id] = rig;
+      } catch (e) {
+        console.warn(`[rigged ${id}] 日常骨骼加载失败，退回 kenney 模型`, e);
+      }
     }
     return new NPCManager(scene, characters, lib);
   }
