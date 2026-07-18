@@ -1,0 +1,36 @@
+{
+  "music": {
+    "note": "十声部递减配乐。stems 为 10 件乐器（占位合成音源），每章结算后按 removalOrder 永久撤掉一件。第 10 章后仅剩 1 件，终章全静默。",
+    "stems": ["piano", "violin1", "violin2", "viola", "cello", "doublebass", "clarinet", "bassoon", "horn", "harp"],
+    "removalOrder": {
+      "1": "harp",
+      "2": "horn",
+      "3": "bassoon",
+      "4": "clarinet",
+      "5": "doublebass",
+      "6": "cello",
+      "7": "viola",
+      "8": "violin2",
+      "9": "violin1",
+      "10": "piano"
+    },
+    "settlementRitual": "章节结算卡：音乐全停 → 瓷人碎裂声 → 3 秒静默 → 新编制淡入"
+  },
+  "sfx": {
+    "figurine_break": "瓷人碎裂（刺耳）",
+    "gramophone_voice": "留声机机械人声（占位蜂鸣+字幕）",
+    "storm_1": "风暴环境声·一级（起风）",
+    "storm_2": "风暴环境声·二级（雨至）",
+    "storm_3": "风暴环境声·三级（暴雨）",
+    "storm_4": "风暴环境声·四级（风暴封岛）",
+    "storm_5": "风暴环境声·五级（持续暴雨）",
+    "bee": "蜜蜂嗡鸣",
+    "footstep_empty": "空别墅脚步回响",
+    "wave": "海浪",
+    "clock": "挂钟",
+    "paper": "翻纸声",
+    "accuse_boom": "指认低音轰鸣",
+    "typewriter": "打字机音效（NPC 字幕）",
+    "gasp": "NPC 语气短叹词"
+  }
+}

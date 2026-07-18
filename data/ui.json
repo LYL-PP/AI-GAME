@@ -1,0 +1,65 @@
+{
+  "ui": {
+    "controls": {
+      "move": "W A S D — 移动",
+      "look": "鼠标 — 环顾",
+      "interact": "E — 交互 / 检视",
+      "notebook": "Tab — 笔记本",
+      "pause": "Esc — 暂停"
+    },
+    "notebook": {
+      "title": "速记本",
+      "tabClues": "线索",
+      "tabBoard": "推理板",
+      "tabPeople": "人物",
+      "tabRhyme": "童谣",
+      "clueEmpty": "这一页还是空白。去看，去听，去翻。",
+      "clueCount": "已收集线索 {n} / 13",
+      "boardHint": "把线索卡拖到嫌疑人卡上连线。系统不评判对错——结论是你自己的。",
+      "suspectMark": "标记“怀疑”",
+      "suspectDead": "已死亡",
+      "accuseSlot": "终局指认槽"
+    },
+    "chapterCard": {
+      "survivors": "岛上还剩 {n} 人",
+      "figurineBreak": "一声脆响。壁炉台上，又一个小士兵碎了。"
+    },
+    "deathBanner": {
+      "found": "发现尸体",
+      "witnessed": "你看见了，但你来不及。",
+      "locked": "死亡已经发生。你救不了任何人——你只能弄清楚真相。"
+    },
+    "accusation": {
+      "prompt": "选择你要指认的人，并拖入最多 3 条支撑线索。",
+      "confirm": "提交指认",
+      "giveUp": "放弃指认（走向结局 C）",
+      "evidenceNeed": "证据不足：真结局需要链 A 至少 2 条线索。"
+    },
+    "stats": {
+      "title": "通关统计",
+      "time": "用时",
+      "clues": "线索收集",
+      "softMarks": "软指认记录",
+      "ending": "结局",
+      "ngPlus": "二周目已解锁：凶手视角批注"
+    },
+    "system": {
+      "loading": "潮水正在涨起……",
+      "saved": "已自动存档",
+      "gameTitle": "无人生还：士兵岛",
+      "gameTitleMain": "无人生还",
+      "gameTitleEn": "AND THEN THERE WERE NONE",
+      "gameTagline": "—— 士兵岛 ——",
+      "gameAuthor": "阿加莎·克里斯蒂 原著",
+      "gameEdition": "游戏改编版",
+      "start": "开始",
+      "continue": "继续",
+      "settings": "设置",
+      "warning": "本作包含自缢、注射等意象，建议 16 岁以上游玩。"
+    },
+    "stormHint": {
+      "title": "旧收音机",
+      "text": "（沙沙声）……海务预报：德文郡外海，今夜起风，明日有风暴。所有出海小船，请即刻回港。"
+    }
+  }
+}

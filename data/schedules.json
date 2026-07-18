@@ -1,0 +1,124 @@
+{
+  "poiNotes": "poi 为符号名，由引擎绑定场景坐标。room 供小地图/调试显示。",
+  "pois": {
+    "hall_fireplace": { "room": "hall", "desc": "大厅壁炉前" },
+    "hall_armchair": { "room": "hall", "desc": "大厅扶手椅" },
+    "hall_window_chair": { "room": "hall", "desc": "大厅靠窗摇椅（布伦特专座）" },
+    "hall_table": { "room": "hall", "desc": "大厅圆桌" },
+    "hall_bar": { "room": "hall", "desc": "大厅吧台前" },
+    "hall_sofa": { "room": "hall", "desc": "大厅沙发" },
+    "dining_table": { "room": "dining", "desc": "餐厅" },
+    "kitchen_stove": { "room": "kitchen", "desc": "厨房灶台" },
+    "butler_pantry": { "room": "butler", "desc": "管家房" },
+    "terrace_sea": { "room": "terrace", "desc": "露台望海" },
+    "corridor_f2": { "room": "corridor2", "desc": "二层走廊" },
+    "bedroom_own": { "room": "own", "desc": "本人客房（按 NPC 解析）" },
+    "bathroom_f2": { "room": "bathroom", "desc": "二层浴室" },
+    "study_armchair": { "room": "study", "desc": "三层书房扶手椅" },
+    "study_books": { "room": "study", "desc": "书房书架前" },
+    "storage_f3": { "room": "storage", "desc": "储藏室" },
+    "porch": { "room": "porch", "desc": "别墅门廊" },
+    "dock_end": { "room": "dock", "desc": "码头栈道尽头" },
+    "cape_bench": { "room": "cape_north", "desc": "北岬角望海长椅" },
+    "woodshed_block": { "room": "woodshed", "desc": "柴棚柴堆" },
+    "beach_mid": { "room": "beach", "desc": "海滩" },
+    "cliff_path_mid": { "room": "cliff_path", "desc": "悬崖小径" },
+    "island_walk": { "room": "outdoor", "desc": "户外巡走（航点漫游）" }
+  },
+  "actions": {
+    "idle": "站立打量四周",
+    "sit": "就座",
+    "sit_read": "坐着读东西",
+    "knit": "织灰色毛线",
+    "gaze_sea": "望海",
+    "serve": "端托盘侍应",
+    "wipe": "擦拭餐具",
+    "cook": "做饭",
+    "write_note": "记小本子",
+    "smoke": "抽烟",
+    "pace": "踱步",
+    "patrol": "巡视",
+    "chop": "劈柴",
+    "faint": "昏倒",
+    "sleep": "躺卧",
+    "tend_bar": "摆弄酒瓶"
+  },
+  "schedules": {
+    "wargrave": {
+      "0": [{ "poi": "hall_armchair", "action": "sit_read" }],
+      "1": [{ "poi": "hall_armchair", "action": "sit" }, { "poi": "study_armchair", "action": "sit_read" }],
+      "2": [{ "poi": "hall_armchair", "action": "sit" }],
+      "3": [{ "poi": "hall_table", "action": "sit" }, { "poi": "study_armchair", "action": "sit_read" }],
+      "4": [{ "poi": "study_armchair", "action": "sit_read" }, { "poi": "hall_armchair", "action": "sit" }],
+      "5": [{ "poi": "hall_armchair", "action": "sit" }]
+    },
+    "vera": {
+      "0": [{ "poi": "terrace_sea", "action": "gaze_sea" }, { "poi": "hall_sofa", "action": "sit" }],
+      "1": [{ "poi": "hall_sofa", "action": "sit" }, { "poi": "corridor_f2", "action": "pace" }],
+      "2": [{ "poi": "terrace_sea", "action": "gaze_sea" }, { "poi": "hall_sofa", "action": "sit" }],
+      "3": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_sofa", "action": "sit" }],
+      "4": [{ "poi": "hall_sofa", "action": "sit" }, { "poi": "bedroom_own", "action": "pace" }],
+      "5": [{ "poi": "corridor_f2", "action": "pace" }, { "poi": "hall_sofa", "action": "sit" }],
+      "6": [{ "poi": "bedroom_own", "action": "pace" }, { "poi": "hall_sofa", "action": "sit" }],
+      "7": [{ "poi": "hall_sofa", "action": "sit" }, { "poi": "bedroom_own", "action": "idle" }],
+      "8": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "beach_mid", "action": "idle" }],
+      "9": [{ "poi": "beach_mid", "action": "idle" }],
+      "10": [{ "poi": "bedroom_own", "action": "idle" }]
+    },
+    "lombard": {
+      "0": [{ "poi": "hall_bar", "action": "smoke" }, { "poi": "terrace_sea", "action": "smoke" }],
+      "1": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_bar", "action": "idle" }],
+      "2": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "porch", "action": "smoke" }],
+      "3": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_bar", "action": "idle" }],
+      "4": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "porch", "action": "smoke" }],
+      "5": [{ "poi": "hall_bar", "action": "idle" }, { "poi": "island_walk", "action": "patrol" }],
+      "6": [{ "poi": "hall_bar", "action": "idle" }, { "poi": "corridor_f2", "action": "pace" }],
+      "7": [{ "poi": "porch", "action": "smoke" }, { "poi": "hall_bar", "action": "idle" }],
+      "8": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "beach_mid", "action": "idle" }]
+    },
+    "armstrong": {
+      "0": [{ "poi": "hall_sofa", "action": "sit" }, { "poi": "terrace_sea", "action": "idle" }],
+      "1": [{ "poi": "hall_table", "action": "idle" }, { "poi": "hall_sofa", "action": "sit" }],
+      "2": [{ "poi": "bedroom_own", "action": "idle" }, { "poi": "hall_sofa", "action": "sit" }],
+      "3": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_sofa", "action": "sit" }],
+      "4": [{ "poi": "hall_sofa", "action": "sit" }, { "poi": "bedroom_own", "action": "idle" }],
+      "5": [{ "poi": "hall_table", "action": "idle" }, { "poi": "hall_sofa", "action": "sit" }],
+      "6": [{ "poi": "study_armchair", "action": "idle" }, { "poi": "hall_sofa", "action": "sit" }]
+    },
+    "blore": {
+      "0": [{ "poi": "porch", "action": "idle" }, { "poi": "hall_bar", "action": "idle" }],
+      "1": [{ "poi": "hall_bar", "action": "write_note" }, { "poi": "island_walk", "action": "patrol" }],
+      "2": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_bar", "action": "write_note" }],
+      "3": [{ "poi": "island_walk", "action": "patrol" }, { "poi": "hall_bar", "action": "write_note" }],
+      "4": [{ "poi": "hall_bar", "action": "write_note" }, { "poi": "island_walk", "action": "patrol" }],
+      "5": [{ "poi": "porch", "action": "idle" }, { "poi": "hall_bar", "action": "write_note" }],
+      "6": [{ "poi": "hall_bar", "action": "write_note" }, { "poi": "corridor_f2", "action": "pace" }],
+      "7": [{ "poi": "hall_bar", "action": "write_note" }, { "poi": "porch", "action": "idle" }]
+    },
+    "macarthur": {
+      "0": [{ "poi": "terrace_sea", "action": "gaze_sea" }, { "poi": "hall_armchair", "action": "sit" }],
+      "1": [{ "poi": "cape_bench", "action": "gaze_sea" }, { "poi": "terrace_sea", "action": "gaze_sea" }],
+      "2": [{ "poi": "cape_bench", "action": "gaze_sea" }]
+    },
+    "brent": {
+      "0": [{ "poi": "hall_window_chair", "action": "knit" }],
+      "1": [{ "poi": "hall_window_chair", "action": "knit" }],
+      "2": [{ "poi": "hall_window_chair", "action": "knit" }],
+      "3": [{ "poi": "hall_window_chair", "action": "knit" }],
+      "4": [{ "poi": "hall_window_chair", "action": "knit" }]
+    },
+    "rogers": {
+      "0": [{ "poi": "dining_table", "action": "serve" }, { "poi": "butler_pantry", "action": "wipe" }],
+      "1": [{ "poi": "kitchen_stove", "action": "cook" }, { "poi": "dining_table", "action": "serve" }],
+      "2": [{ "poi": "kitchen_stove", "action": "cook" }, { "poi": "dining_table", "action": "serve" }],
+      "3": [{ "poi": "dining_table", "action": "serve" }, { "poi": "butler_pantry", "action": "wipe" }]
+    },
+    "mrs_rogers": {
+      "0": [{ "poi": "kitchen_stove", "action": "cook" }, { "poi": "butler_pantry", "action": "idle" }],
+      "1": [{ "poi": "bedroom_own", "action": "sleep" }]
+    },
+    "marston": {
+      "0": [{ "poi": "hall_bar", "action": "tend_bar" }, { "poi": "terrace_sea", "action": "idle" }]
+    }
+  }
+}

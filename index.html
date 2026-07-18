@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无人生还：士兵岛</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "./js/vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- 暗角（CSS 实现，不用后处理） -->
+<div id="vignette"></div>
+
+<!-- HUD -->
+<div id="crosshair"></div>
+
+<div id="chapterCard">
+  <div id="chTitle"></div>
+  <div id="chAmbience"></div>
+</div>
+
+<div id="poiPrompt">
+  <div id="poiName"></div>
+  <div id="poiHint"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="controlsHint"></div>
+
+<div id="audioHud" title="配乐声部"></div>
+
+<!-- 引导箭头 -->
+<div id="guide"><span id="guideArrow">▲</span><span id="guideText"></span></div>
+
+<!-- 结算演出覆盖层 -->
+<div id="settleOverlay">
+  <div id="settleRhyme"></div>
+  <div id="settleBreak"></div>
+  <div id="settleCard"><div id="settleCardText"></div><div id="settleAnno"></div></div>
+</div>
+<div id="flashWhite"></div>
+
+<!-- 结局演出 -->
+<div id="endingOverlay">
+  <div id="endCenter">
+    <h2 id="endTitle"></h2>
+    <div id="endSubtitles"></div>
+    <div id="endChoices"></div>
+  </div>
+  <div id="endLetter">
+    <div id="endLetterTitle"></div>
+    <div id="endLetterText"></div>
+    <div id="endLetterEcho"></div>
+    <div class="end-letter-hint">E — 继续</div>
+  </div>
+  <div id="endNotebookAnim"><div class="end-nb-cover"></div></div>
+  <svg id="endSilhouette" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
+    <rect width="800" height="450" fill="#05070a"/>
+    <g fill="#d98e4a" opacity="0.85">
+      <!-- 扶手椅 -->
+      <rect x="300" y="250" width="120" height="26"/>
+      <rect x="292" y="200" width="18" height="76"/>
+      <rect x="410" y="200" width="18" height="76"/>
+      <rect x="310" y="276" width="12" height="60"/>
+      <rect x="400" y="276" width="12" height="60"/>
+      <!-- 人形（坐姿，举枪抵颚） -->
+      <circle cx="368" cy="170" r="20"/>
+      <path d="M350 192 q-18 30 -14 60 l64 0 q6 -34 -12 -60 z"/>
+      <rect x="382" y="150" width="34" height="7" transform="rotate(-24 382 150)"/>
+      <!-- 门与皮筋细线 -->
+      <rect x="690" y="120" width="70" height="220" fill="none" stroke="#d98e4a" stroke-width="2"/>
+      <circle cx="700" cy="230" r="4"/>
+      <path d="M410 155 Q 560 120 700 230" fill="none" stroke="#d98e4a" stroke-width="1.2" stroke-dasharray="4 4"/>
+    </g>
+    <circle id="muzzle" cx="414" cy="140" r="0" fill="#fff"/>
+  </svg>
+</div>
+
+<!-- 章节导航面板（F1） -->
+<div id="navPanel">
+  <div class="nav-frame">
+    <div class="nav-header">章节导航 <span class="nav-hint">F1 / Esc 关闭</span></div>
+    <div id="navList"></div>
+    <div class="nav-opts">
+      <label><input type="checkbox" id="navCarry" checked> 跳转时携带本章已可收集的线索</label>
+    </div>
+    <div class="nav-actions">
+      <button id="navSceneBtn" class="title-btn">前往本章死亡现场</button>
+      <button id="navBoardBtn" class="title-btn">打开推理板</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通关统计 -->
+<div id="stats">
+  <div class="st-box">
+    <h1 id="stTitle"></h1>
+    <div id="stRows"></div>
+    <div id="stNG"></div>
+    <button id="stRestart" class="title-btn"></button>
+  </div>
+</div>
+
+<!-- 速记本（Tab） -->
+<div id="notebook">
+  <div class="nb-frame">
+    <div class="nb-header">
+      <div id="nbTitle"></div>
+      <div class="nb-tabs">
+        <button class="nb-tab" data-tab="clues"></button>
+        <button class="nb-tab" data-tab="board"></button>
+        <button class="nb-tab" data-tab="people"></button>
+        <button class="nb-tab" data-tab="rhyme"></button>
+      </div>
+      <button id="nbClose">×</button>
+    </div>
+    <div class="nb-page" id="nbPageClues">
+      <div id="nbClueCount"></div>
+      <div id="nbClueList"></div>
+    </div>
+    <div class="nb-page" id="nbPageBoard">
+      <div id="nbBoardHint"></div>
+      <div class="nb-board-wrap">
+        <div id="nbCluePool"></div>
+        <div id="nbSuspects"></div>
+        <svg id="nbLines"></svg>
+      </div>
+      <div id="nbAccuse"></div>
+    </div>
+    <div class="nb-page" id="nbPagePeople"><div id="nbPeopleList"></div></div>
+    <div class="nb-page" id="nbPageRhyme"><div id="nbRhyme"></div></div>
+  </div>
+</div>
+
+<!-- 标题画面 -->
+<div id="titleScreen">
+  <div class="title-block">
+    <h1 class="game-title" id="titleName">无人生还</h1>
+    <p class="game-subtitle" id="titleSub">AND THEN THERE WERE NONE</p>
+    <p class="game-tagline" id="titleTag">—— 士兵岛 ——</p>
+    <p class="game-author" id="titleAuthor">阿加莎·克里斯蒂 原著</p>
+    <p class="game-edition" id="titleEdition">游戏改编版</p>
+  </div>
+  <div class="title-btns">
+    <button id="btnContinue" class="start-btn" style="display:none"></button>
+    <button id="btnStart" class="start-btn"></button>
+  </div>
+  <div id="titleWarn"></div>
+</div>
+
+<!-- 运镜（letterbox + 字幕） -->
+<div id="cineTop" class="cine-bar"></div>
+<div id="cineBottom" class="cine-bar"></div>
+<div id="cineSub"><span id="cineSpeaker"></span><span id="cineText"></span></div>
+
+<!-- 对话框 -->
+<div id="dlgBox">
+  <div id="dlgPortrait"></div>
+  <div class="dlg-main">
+    <div id="dlgName"></div>
+    <div id="dlgText"></div>
+    <div id="dlgChoices"></div>
+    <div id="dlgHint">E / 点击 — 继续</div>
+  </div>
+</div>
+
+<!-- 进入覆盖层（pointer lock 提示） -->
+<div id="startOverlay">
+  <div class="ov-box">
+    <div class="ov-deco">════════ ◆ ════════</div>
+    <h1 id="ovTitle">无人生还：士兵岛</h1>
+    <div id="ovLoading">潮水正在涨起……</div>
+    <div id="ovStart" style="display:none">点击进入</div>
+    <div id="ovControls"></div>
+    <div id="ovWarn"></div>
+    <div class="ov-deco">════════ ◆ ════════</div>
+  </div>
+</div>
+
+<!-- 数据加载失败提示 -->
+<div id="fetchError">
+  <div class="ov-box">
+    <h1>无法载入游戏数据</h1>
+    <p>请用 <b>启动游戏.bat</b> 或在游戏目录运行 <b>python -m http.server 8000</b> 后访问 http://localhost:8000/</p>
+    <p class="dim">（直接双击 index.html 以 file:// 打开时，浏览器禁止读取 data/*.json）</p>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "chapters": [
+    { "id": 0, "key": "prologue", "title": "序章", "subtitle": "这是一座已经写好剧本的岛。", "rhymeIndex": null, "survivors": 11, "weather": "overcast", "ambience": "阴，海面渐起浪", "day": "第一日 白天" },
+    { "id": 1, "key": "ch01", "title": "第 1 章 · 呛住的酒", "subtitle": "十个小士兵，结伴去吃饭；一个呛住了，十人只剩九。", "rhymeIndex": 1, "survivors": 10, "weather": "wind_rain_arrive", "ambience": "起风，雨至", "day": "第一日 夜" },
+    { "id": 2, "key": "ch02", "title": "第 2 章 · 长眠", "subtitle": "九个小士兵，熬夜不肯眠；一个睡过头，九人只剩八。", "rhymeIndex": 2, "survivors": 9, "weather": "storm", "ambience": "暴雨，船未至", "day": "第二日 晨" },
+    { "id": 3, "key": "ch03", "title": "第 3 章 · 留守者", "subtitle": "八个小士兵，远行到德文；一个留下来，八人只剩七。", "rhymeIndex": 3, "survivors": 8, "weather": "storm_heavy", "ambience": "风暴封岛", "day": "第二日 午后" },
+    { "id": 4, "key": "ch04", "title": "第 4 章 · 柴与斧", "subtitle": "七个小士兵，抡斧把柴劈；一斧劈自身，七人只剩六。", "rhymeIndex": 4, "survivors": 7, "weather": "storm_heavy", "ambience": "持续暴雨", "day": "第三日 晨" },
+    { "id": 5, "key": "ch05", "title": "第 5 章 · 蜂与针", "subtitle": "六个小士兵，捅了马蜂窝；蜂针蜇一个，六人只剩五。", "rhymeIndex": 5, "survivors": 6, "weather": "fog", "ambience": "雨歇，雾，压抑的静", "day": "第三日 午后" },
+    { "id": 6, "key": "ch06", "title": "第 6 章 · 法袍", "subtitle": "五个小士兵，高坐法官席；一个入法网，五人只剩四。", "rhymeIndex": 6, "survivors": 5, "weather": "night_candle", "ambience": "夜，烛光，红色法袍", "day": "第三日 夜" },
+    { "id": 7, "key": "ch07", "title": "第 7 章 · 红鲱鱼", "subtitle": "四个小士兵，扬帆出大海；红鲱鱼吞一个，四人只剩三。", "rhymeIndex": 7, "survivors": 4, "weather": "fog_dense", "ambience": "浓雾", "day": "第三日 深夜" },
+    { "id": 8, "key": "ch08", "title": "第 8 章 · 大熊", "subtitle": "三个小士兵，动物园里走；大熊抱一个，三人只剩二。", "rhymeIndex": 8, "survivors": 3, "weather": "fog_lift_pale", "ambience": "雾散，惨白的天", "day": "第四日 晨" },
+    { "id": 9, "key": "ch09", "title": "第 9 章 · 烈日", "subtitle": "两个小士兵，烈日底下坐；一个被晒焦，二人只剩一。", "rhymeIndex": 9, "survivors": 2, "weather": "eerie_clear", "ambience": "诡异的晴", "day": "第四日 午" },
+    { "id": 10, "key": "ch10", "title": "第 10 章 · 一个也不剩", "subtitle": "一个小士兵，孑然一身孤；悬梁了此生，一个也不剩。", "rhymeIndex": 10, "survivors": 1, "weather": "dead_calm", "ambience": "死寂", "day": "第四日 午后" },
+    { "id": 11, "key": "finale", "title": "终章 · 指认", "subtitle": "海面归于平静之后，岸上的人会开来小船。", "rhymeIndex": null, "survivors": 1, "weather": "clear_calm", "ambience": "风暴彻底过去，空岛", "day": "第四日 黄昏" }
+  ]
+}

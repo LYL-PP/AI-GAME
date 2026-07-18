@@ -1,0 +1,321 @@
+{
+  "characters": [
+    {
+      "id": "wargrave",
+      "name": "沃格雷夫",
+      "fullName": "劳伦斯·约翰·沃格雷夫",
+      "role": "退休法官",
+      "appearance": "瘦削秃顶、龟壳眼镜、目光如蛇",
+      "personality": "冷静、威严、掌控全场；习惯主持讨论与“质询”",
+      "voice": "缓慢、清晰、带法庭腔；从不提高音量",
+      "accusation": "1930年6月10日判处爱德华·塞顿死刑——他始终坚称塞顿有罪",
+      "truth": "真凶。与阿姆斯特朗合谋假死后逐一灭口，最终自杀并投出瓶中信",
+      "death": {
+        "chapter": 6,
+        "method": "“枪击”（假死）",
+        "scene": "书房扶手椅，红窗帘法袍、灰毛线假发、额头“枪伤”",
+        "real": false
+      },
+      "foreshadow": [
+        "主动组织搜查全岛、集中看管，掌控节奏",
+        "第5章后向玩家意味深长地复述塞顿案",
+        "留声机播放时异常从容"
+      ],
+      "modelHint": {
+        "kenney": "character-j",
+        "note": "瘦高、面色阴沉；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/wargrave.jpg",
+        "promptId": "wargrave"
+      }
+    },
+    {
+      "id": "vera",
+      "name": "维拉",
+      "fullName": "维拉·伊丽莎白·克莱索恩",
+      "role": "女教师（应聘秘书职）",
+      "appearance": "年轻、体态利落，警觉紧绷",
+      "personality": "外表镇定自持，内里罪疚翻涌；越到后期越濒临崩溃",
+      "voice": "语速偏快，句子短；后期出现颤音与自语",
+      "accusation": "1935年8月11日放任溺水男童西里尔·汉密尔顿死去，以成全恋人雨果的继承权",
+      "truth": "指控属实。西里尔游向礁石时她故意迟援",
+      "death": {
+        "chapter": 10,
+        "method": "自缢（沃格雷夫布置机关+心理诱导）",
+        "scene": "二楼自己房间，椅子翻倒",
+        "real": true
+      },
+      "foreshadow": [
+        "房里摆着男童西里尔的照片",
+        "怕海、怕水草（第7章尖叫调虎离山）",
+        "第9章后行为明显崩溃"
+      ],
+      "modelHint": {
+        "kenney": "character-f",
+        "note": "年轻女性、素色衣裙；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/vera.jpg",
+        "promptId": "vera"
+      }
+    },
+    {
+      "id": "lombard",
+      "name": "隆巴德",
+      "fullName": "菲利普·隆巴德",
+      "role": "雇佣兵",
+      "appearance": "高大、晒黑，枪套不离身，咧嘴露尖利白牙",
+      "personality": "大胆、玩世不恭、危险；直认不讳自己不是好人",
+      "voice": "懒洋洋的低音，带嘲弄；笑起来像狼",
+      "accusation": "1932年2月在东非抛弃二十一名土著向导任其死亡",
+      "truth": "指控属实。他径直承认了",
+      "death": {
+        "chapter": 9,
+        "method": "被维拉夺其左轮枪击毙",
+        "scene": "海滩，两人对峙后枪响",
+        "real": true
+      },
+      "foreshadow": [
+        "受莫里斯百金雇来岛且带枪",
+        "第6章发现左轮失窃，暴躁搜屋",
+        "始终怀疑沃格雷夫"
+      ],
+      "modelHint": {
+        "kenney": "character-b",
+        "note": "高大男性、深色外套；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/lombard.jpg",
+        "promptId": "lombard"
+      }
+    },
+    {
+      "id": "armstrong",
+      "name": "阿姆斯特朗",
+      "fullName": "爱德华·乔治·阿姆斯特朗",
+      "role": "医生",
+      "appearance": "体面、神经质、手抖",
+      "personality": "自负又脆弱；急于撇清，容易轻信“德高望重”的人",
+      "voice": "急促、辩解式；被戳痛处时音量陡增",
+      "accusation": "1925年3月14日酒后手术，致病人路易莎·玛丽·克利斯死亡",
+      "truth": "指控属实。唯一验看沃格雷夫“尸体”的人——假死链的关键",
+      "death": {
+        "chapter": 7,
+        "method": "被推下悬崖溺亡",
+        "scene": "悬崖下礁石滩，潮水中",
+        "real": true
+      },
+      "foreshadow": [
+        "每次验尸都极其潦草",
+        "药箱锁着却出现开锁痕",
+        "第7章深夜应沃格雷夫之约外出，一去不回"
+      ],
+      "modelHint": {
+        "kenney": "character-e",
+        "note": "戴眼镜、西装；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/armstrong.jpg",
+        "promptId": "armstrong"
+      }
+    },
+    {
+      "id": "blore",
+      "name": "布洛尔",
+      "fullName": "威廉·亨利·布洛尔",
+      "role": "前警探",
+      "appearance": "粗壮、面色红润、眼神多疑",
+      "personality": "警惕、好盘问、记小本子；粗中有细",
+      "voice": "粗嗓，盘问腔；被反问时支吾",
+      "accusation": "1928年10月10日作伪证，致无辜者詹姆斯·兰道入狱死亡",
+      "truth": "指控属实。登岛时用假身份“戴维斯”被当场拆穿",
+      "death": {
+        "chapter": 8,
+        "method": "被维拉窗台坠下的大理石熊钟砸杀",
+        "scene": "别墅门廊下，熊钟碎裂",
+        "real": true
+      },
+      "foreshadow": [
+        "记小本子（与玩家笔记本对照）",
+        "跟在别人后面盯梢",
+        "第7章深夜听到过神秘脚步声"
+      ],
+      "modelHint": {
+        "kenney": "character-d",
+        "note": "粗壮男性；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/blore.jpg",
+        "promptId": "blore"
+      }
+    },
+    {
+      "id": "macarthur",
+      "name": "麦克阿瑟",
+      "fullName": "约翰·戈登·麦克阿瑟",
+      "role": "退役将军",
+      "appearance": "衰老军人，白发，常望海独坐",
+      "personality": "疲惫、认命；指控之后一心等死，异常平静",
+      "voice": "缓慢、低沉，像从很远的地方说话",
+      "accusation": "1917年1月4日故意派妻子的情人阿瑟·里奇蒙执行必死任务",
+      "truth": "指控属实。他向维拉完整认罪，并说“我不会离开这座岛了”",
+      "death": {
+        "chapter": 3,
+        "method": "钝器击头",
+        "scene": "北岬角望海长椅，面向大海",
+        "real": true
+      },
+      "foreshadow": [
+        "提前说自己“不会离开这座岛了”",
+        "第二日全天在北岬角望海",
+        "对死亡预言式的平静"
+      ],
+      "modelHint": {
+        "kenney": "character-h",
+        "note": "年长男性、军装色；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/macarthur.jpg",
+        "promptId": "macarthur"
+      }
+    },
+    {
+      "id": "brent",
+      "name": "布伦特",
+      "fullName": "埃米莉·卡罗琳·布伦特",
+      "role": "独居老小姐",
+      "appearance": "清瘦老妇，永远织毛线",
+      "personality": "冷峻、自以为义；拒不认罪，毫无悔意",
+      "voice": "干脆、僵硬，字字分明；不容顶撞",
+      "accusation": "1931年11月5日赶走怀孕女仆比阿特丽斯·泰勒，致其投河自尽",
+      "truth": "指控属实。她向维拉自述此事且毫无悔意",
+      "death": {
+        "chapter": 5,
+        "method": "毒针注射（现场放蜂呼应童谣）",
+        "scene": "大厅摇椅上，窗外有蜜蜂盘旋",
+        "real": true
+      },
+      "foreshadow": [
+        "织的是灰色毛线——第6章“尸体”上的假发正是灰毛线",
+        "写日记（日后成警方证据）"
+      ],
+      "modelHint": {
+        "kenney": "character-i",
+        "note": "年长女性、深色长裙；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/brent.jpg",
+        "promptId": "brent"
+      }
+    },
+    {
+      "id": "rogers",
+      "name": "罗杰斯",
+      "fullName": "托马斯·罗杰斯",
+      "role": "管家",
+      "appearance": "体面、苍白、强撑服务",
+      "personality": "克制到机械；太太死后仍坚持上菜，反而吓人",
+      "voice": "恭敬、平板；情绪只在词缝里漏出来",
+      "accusation": "1929年5月6日与妻子合谋停发雇主詹尼弗·布雷迪的药，致其死亡以继承遗产",
+      "truth": "指控属实。唱片是他按“欧文先生”指示播放的",
+      "death": {
+        "chapter": 4,
+        "method": "劈柴时被斧杀",
+        "scene": "柴棚，柴堆散了一地",
+        "real": true
+      },
+      "foreshadow": [
+        "太太死后仍机械上菜",
+        "逐章清点瓷人数目的人总是他",
+        "口袋里的餐厅钥匙被凶手取走"
+      ],
+      "modelHint": {
+        "kenney": "character-g",
+        "note": "侍者装束；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/rogers.jpg",
+        "promptId": "rogers"
+      }
+    },
+    {
+      "id": "mrs_rogers",
+      "name": "罗杰斯太太",
+      "fullName": "埃塞尔·罗杰斯",
+      "role": "厨娘/女管家",
+      "appearance": "苍白瘦弱、眼神惊恐",
+      "personality": "惶恐、负罪感重；留声机播放时当场昏厥",
+      "voice": "轻、飘，句尾常断掉",
+      "accusation": "与丈夫合谋害死雇主詹尼弗·布雷迪",
+      "truth": "指控属实；她受丈夫影响更深，罪疚压垮了她",
+      "death": {
+        "chapter": 2,
+        "method": "安眠药过量，长眠不醒",
+        "scene": "清晨未下楼，卧室床上“睡着”",
+        "real": true
+      },
+      "foreshadow": [
+        "留声机播放时当场昏厥",
+        "出场即“连自己的影子都能吓到她”"
+      ],
+      "modelHint": {
+        "kenney": "character-k",
+        "note": "瘦弱女性、深色衣；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/mrs_rogers.jpg",
+        "promptId": "mrs_rogers"
+      }
+    },
+    {
+      "id": "marston",
+      "name": "马尔斯顿",
+      "fullName": "安东尼·詹姆斯·马尔斯顿",
+      "role": "花花公子",
+      "appearance": "浮夸富二代，跑车钥匙不离手，帅得像神祇",
+      "personality": "轻佻、满不在乎；对撞死两个孩子毫无悔意",
+      "voice": "高、亮、快，永远像在开派对",
+      "accusation": "去年11月14日飙车撞死约翰和露西·库姆斯兄妹，凭钱脱罪",
+      "truth": "指控属实。第一个死，来不及有任何伏笔",
+      "death": {
+        "chapter": 1,
+        "method": "氰化物毒酒",
+        "scene": "晚餐敬酒时突然呛咳倒地",
+        "real": true
+      },
+      "foreshadow": [
+        "“为犯法干一杯”——他的轻浮本身就是注脚"
+      ],
+      "modelHint": {
+        "kenney": "character-c",
+        "note": "鲜亮衣着年轻男性；待人工确认"
+      },
+      "portrait": {
+        "file": "assets/portraits/marston.jpg",
+        "promptId": "marston"
+      }
+    },
+    {
+      "id": "player",
+      "name": "你",
+      "fullName": "受雇于U.N.欧文的速记员（姓名由玩家代入）",
+      "role": "记录员/玩家",
+      "appearance": "第一人称，不露脸；手持笔记本",
+      "personality": "旁观者的无力，侦探的执念",
+      "voice": "内心独白为速记体短句",
+      "accusation": "明知一份证词系伪造，为前程沉默，致无辜者获罪（游戏原创第11条指控）",
+      "truth": "隐藏结局揭示：玩家可选择把自白写进瓶中或烧掉",
+      "death": null,
+      "foreshadow": [
+        "笔记本是所有系统UI的叙事化载体",
+        "第11条指控构成个人暗线"
+      ],
+      "modelHint": null,
+      "portrait": {
+        "file": "assets/portraits/player.svg",
+        "promptId": "player"
+      }
+    }
+  ]
+}

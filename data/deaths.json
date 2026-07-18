@@ -1,0 +1,86 @@
+{
+  "deaths": [
+    {
+      "chapter": 1, "victimId": "marston", "method": "氰化物毒酒",
+      "presentation": "onscreen",
+      "scene": "唯一一场当面死亡：晚餐敬酒时突然呛咳倒地",
+      "discover": "全员在场目睹",
+      "clueIds": ["clue_01"],
+      "cue": { "sound": "choking", "mapPing": "dining" }
+    },
+    {
+      "chapter": 2, "victimId": "mrs_rogers", "method": "安眠药过量",
+      "presentation": "frozen_scene",
+      "scene": "清晨未下楼；卧室床上“睡着”",
+      "discover": "罗杰斯报信，众人上楼查看",
+      "clueIds": ["clue_02", "clue_03"],
+      "cue": { "sound": "morning_bell_silence", "mapPing": "bedroom_rogers" }
+    },
+    {
+      "chapter": 3, "victimId": "macarthur", "method": "钝器击头",
+      "presentation": "frozen_scene",
+      "scene": "北岬角望海长椅，面向大海",
+      "discover": "布洛尔奉命去叫他吃饭，发现尸体",
+      "clueIds": ["clue_04"],
+      "cue": { "sound": "distant_shout", "mapPing": "cape_north" }
+    },
+    {
+      "chapter": 4, "victimId": "rogers", "method": "斧劈后脑",
+      "presentation": "frozen_scene",
+      "scene": "柴棚，柴堆散了一地",
+      "discover": "清晨无人生火，众人寻至柴棚",
+      "clueIds": ["clue_05"],
+      "cue": { "sound": "axe_drop_echo", "mapPing": "woodshed" }
+    },
+    {
+      "chapter": 5, "victimId": "brent", "method": "毒针注射",
+      "presentation": "frozen_scene",
+      "scene": "大厅织毛线的摇椅上，窗外有蜜蜂盘旋",
+      "discover": "午餐时她未出现，众人在大厅发现",
+      "clueIds": ["clue_06", "clue_07"],
+      "cue": { "sound": "bee_hum", "mapPing": "hall" }
+    },
+    {
+      "chapter": 6, "victimId": "wargrave", "method": "“枪击”（假死）",
+      "presentation": "frozen_scene",
+      "scene": "书房扶手椅，红窗帘改的法袍、灰毛线假发、额头“枪伤”，两侧点蜡烛",
+      "discover": "维拉房中水草尖叫调虎离山，众人回大厅发现",
+      "clueIds": ["clue_08", "clue_09"],
+      "cue": { "sound": "vera_scream", "mapPing": "study" },
+      "note": "仅阿姆斯特朗近身验看——链 A 核心"
+    },
+    {
+      "chapter": 7, "victimId": "armstrong", "method": "坠崖溺亡",
+      "presentation": "frozen_scene",
+      "scene": "悬崖下礁石滩，潮水中（当夜仅发现失踪，尸体次日冲上岸）",
+      "discover": "午夜房门自外上锁、人失踪；次日傍晚发现浮尸",
+      "clueIds": ["clue_10"],
+      "cue": { "sound": "door_lock_night", "mapPing": "cliff_path" }
+    },
+    {
+      "chapter": 8, "victimId": "blore", "method": "大理石熊钟坠杀",
+      "presentation": "frozen_scene",
+      "scene": "别墅门廊下，熊钟碎裂",
+      "discover": "三人听到门廊闷响，出门发现",
+      "clueIds": ["clue_11"],
+      "cue": { "sound": "marble_crash", "mapPing": "porch" }
+    },
+    {
+      "chapter": 9, "victimId": "lombard", "method": "被维拉夺枪击毙",
+      "presentation": "distant_witness",
+      "scene": "海滩，两人对峙后枪响——玩家远距离目睹剪影",
+      "discover": "玩家目击（不可干预距离）",
+      "clueIds": ["clue_12"],
+      "cue": { "sound": "gunshot_beach", "mapPing": "beach" }
+    },
+    {
+      "chapter": 10, "victimId": "vera", "method": "自缢",
+      "presentation": "frozen_scene",
+      "scene": "二楼她的房间，椅子翻倒",
+      "discover": "玩家回屋时发现",
+      "clueIds": ["clue_13"],
+      "cue": { "sound": "chair_topple", "mapPing": "bedroom_vera" },
+      "note": "情绪章，本章无新推理线索"
+    }
+  ]
+}

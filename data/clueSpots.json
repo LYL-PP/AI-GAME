@@ -1,0 +1,20 @@
+{
+  "clueSpots": {
+    "note": "13 条线索的拾取落点。poi 与 schedules.json 的符号名一致；offset 为引擎放置时的局部微调说明。itemDesc 为场景中可交互物的外观提示。",
+    "spots": [
+      { "clueId": "clue_01", "poi": "dining_table", "itemDesc": "翻倒的酒杯，杯底残液", "chapterAvailable": 1 },
+      { "clueId": "clue_02", "poi": "bedroom_mrs_rogers", "itemDesc": "床头空药瓶", "chapterAvailable": 2 },
+      { "clueId": "clue_03", "poi": "bedroom_armstrong", "itemDesc": "药箱，锁上有新划痕", "chapterAvailable": 2 },
+      { "clueId": "clue_04", "poi": "cape_bench", "itemDesc": "长椅旁带血的礁石", "chapterAvailable": 3 },
+      { "clueId": "clue_05", "poi": "woodshed_block", "itemDesc": "靠在柴棚门边的柴斧", "chapterAvailable": 4 },
+      { "clueId": "clue_06", "poi": "dining_table", "itemDesc": "餐厅窗外摔碎的注射器", "chapterAvailable": 5 },
+      { "clueId": "clue_07", "poi": "hall_window_chair", "itemDesc": "布伦特脖颈上的细小针孔（检视尸体获得）", "chapterAvailable": 5 },
+      { "clueId": "clue_08", "poi": "study_armchair", "itemDesc": "验看记录：全程仅阿姆斯特朗一人近身（对话/检视书房获得）", "chapterAvailable": 6 },
+      { "clueId": "clue_09", "poi": "bathroom_f2", "itemDesc": "浴室红窗帘缺失处/书房碎布", "chapterAvailable": 6 },
+      { "clueId": "clue_10", "poi": "cliff_path_mid", "itemDesc": "悬崖小径边沿的滑落擦痕", "chapterAvailable": 7 },
+      { "clueId": "clue_11", "poi": "bedroom_vera", "itemDesc": "维拉房间窗台上的擦痕", "chapterAvailable": 8 },
+      { "clueId": "clue_12", "poi": "beach_mid", "itemDesc": "维拉手中的左轮（海滩现场）", "chapterAvailable": 9 },
+      { "clueId": "clue_13", "poi": "bedroom_vera", "itemDesc": "绳结与翻倒的椅子（维拉房间现场）", "chapterAvailable": 10 }
+    ]
+  }
+}

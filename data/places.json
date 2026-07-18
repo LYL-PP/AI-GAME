@@ -1,0 +1,35 @@
+{
+  "places": {
+    "villaName": "士兵岛别墅",
+    "bedrooms": [
+      { "id": "bedroom_wargrave", "floor": 2, "nameplate": "沃格雷夫", "sub": "Mr. Justice Wargrave" },
+      { "id": "bedroom_vera", "floor": 2, "nameplate": "维拉", "sub": "Miss Vera Claythorne", "note": "窗台置大理石熊钟" },
+      { "id": "bedroom_armstrong", "floor": 2, "nameplate": "阿姆斯特朗", "sub": "Dr. Edward Armstrong" },
+      { "id": "bedroom_blore", "floor": 2, "nameplate": "布洛尔", "sub": "Mr. William Blore" },
+      { "id": "bedroom_macarthur", "floor": 2, "nameplate": "麦克阿瑟", "sub": "General John Macarthur" },
+      { "id": "bedroom_rogers", "floor": 2, "nameplate": "罗杰斯夫妇", "sub": "Mr. & Mrs. Rogers" },
+      { "id": "bedroom_marston", "floor": 2, "nameplate": "马尔斯顿", "sub": "Mr. Anthony Marston" },
+      { "id": "bedroom_brent", "floor": 2, "nameplate": "布伦特", "sub": "Miss Emily Brent" },
+      { "id": "bedroom_lombard", "floor": 2, "nameplate": "隆巴德", "sub": "Captain Philip Lombard" },
+      { "id": "bedroom_player", "floor": 2, "nameplate": "记录员", "sub": "The Stenographer" }
+    ],
+    "commonRooms": [
+      { "id": "hall", "floor": 1, "nameplate": "大厅", "sub": "The Hall" },
+      { "id": "dining", "floor": 1, "nameplate": "餐厅", "sub": "Dining Room" },
+      { "id": "kitchen", "floor": 1, "nameplate": "厨房", "sub": "Kitchen" },
+      { "id": "butler", "floor": 1, "nameplate": "管家房", "sub": "Butler's Pantry" },
+      { "id": "terrace", "floor": 1, "nameplate": "露台", "sub": "The Terrace" },
+      { "id": "bathroom", "floor": 2, "nameplate": "浴室", "sub": "Bathroom" },
+      { "id": "study", "floor": 3, "nameplate": "书房", "sub": "The Study" },
+      { "id": "storage", "floor": 3, "nameplate": "储藏室", "sub": "Storage" }
+    ],
+    "pois": [
+      { "id": "dock", "nameplate": "码头", "sub": "The Jetty" },
+      { "id": "cape_north", "nameplate": "北岬角", "sub": "The North Cape", "note": "望海长椅" },
+      { "id": "woodshed", "nameplate": "柴棚", "sub": "The Woodshed" },
+      { "id": "beach", "nameplate": "海滩", "sub": "The Beach" },
+      { "id": "cliff_path", "nameplate": "悬崖小径", "sub": "The Cliff Path" },
+      { "id": "lone_tree", "nameplate": "孤树", "sub": "The Lone Tree", "note": "悬崖顶" }
+    ]
+  }
+}

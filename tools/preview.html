@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>M0 文案资产预览 · 无人生还：士兵岛</title>
+<style>
+  :root { --gold:#c9a86a; --bg:#17171c; --panel:#1f1f26; --text:#e8e0cf; --dim:#8a8578; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:"Noto Serif SC",serif; display:flex; height:100vh; }
+  nav { width:220px; background:var(--panel); border-right:1px solid var(--gold); padding:16px; overflow-y:auto; flex-shrink:0; }
+  nav h1 { font-size:16px; color:var(--gold); margin:0 0 12px; }
+  nav .tab { padding:8px 10px; cursor:pointer; border-left:3px solid transparent; color:var(--dim); }
+  nav .tab:hover { color:var(--text); }
+  nav .tab.active { border-left-color:var(--gold); color:var(--gold); background:#26262e; }
+  nav select { width:100%; margin:4px 0 8px; background:#26262e; color:var(--text); border:1px solid var(--gold); padding:4px; font-family:inherit; }
+  main { flex:1; padding:24px 32px; overflow-y:auto; }
+  h2 { color:var(--gold); border-bottom:1px solid #444; padding-bottom:8px; font-size:20px; }
+  h3 { color:var(--gold); font-size:16px; margin:20px 0 8px; }
+  .card { background:var(--panel); border:1px solid #3a3a44; border-left:3px solid var(--gold); padding:12px 16px; margin:8px 0; }
+  .meta { color:var(--dim); font-size:13px; }
+  .charge { border-left-color:#8b3a3a; }
+  .echo { border-left-color:#4a5a8b; font-style:italic; }
+  .choice { color:var(--dim); font-size:13px; margin-left:16px; }
+  .warn { color:#c96a6a; }
+  table { border-collapse:collapse; width:100%; }
+  td,th { border:1px solid #3a3a44; padding:6px 10px; font-size:14px; text-align:left; }
+  th { color:var(--gold); }
+  #err { color:#c96a6a; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<nav>
+  <h1>无人生还：士兵岛<br><span style="font-size:12px;color:var(--dim)">M0 文案资产预览</span></h1>
+  <div id="nav"></div>
+</nav>
+<main id="main"><h2>加载中……</h2></main>
+<script>
+const DATA = {};
+const files = ["characters","rhyme","accusation","chapters","deaths","clues","confession","endings","ui"];
+const npcs = ["wargrave","vera","lombard","armstrong","blore","macarthur","brent","rogers","mrs_rogers","marston","echoes"];
+
+async function boot() {
+  try {
+    for (const f of files) DATA[f] = await (await fetch(`../data/${f}.json`)).json();
+    DATA.dialogues = {};
+    for (const n of npcs) DATA.dialogues[n] = await (await fetch(`../data/dialogues/${n}.json`)).json();
+  } catch (e) {
+    document.getElementById("main").innerHTML = `<h2>数据加载失败</h2><p id="err">${e}</p>
+      <p>浏览器禁止 file:// 下的 fetch。请在 <b>game-正式版</b> 目录下启动本地服务器：</p>
+      <pre>cd game-正式版\npython -m http.server 8000</pre>
+      <p>然后访问 <b>http://localhost:8000/tools/preview.html</b></p>`;
+    return;
+  }
+  buildNav();
+  show("chapters");
+}
+
+const TABS = [["chapters","章节卡"],["rhyme","童谣"],["accusation","留声机指控"],["characters","人物档案"],
+  ["deaths","死亡事件"],["clues","线索"],["dialogues","对话树"],["confession","自白信"],["endings","结局"],["ui","UI 文案"]];
+
+function buildNav() {
+  document.getElementById("nav").innerHTML = TABS.map(([k,v]) =>
+    `<div class="tab" data-k="${k}" onclick="show('${k}')">${v}</div>`).join("");
+}
+
+function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function show(k) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.k === k));
+  const m = document.getElementById("main");
+  const R = {
+    chapters() {
+      return `<h2>章节卡（12）</h2>` + DATA.chapters.chapters.map(c => `
+        <div class="card"><b>${esc(c.title)}</b> <span class="meta">${esc(c.day)} · 存活 ${c.survivors} 人 · 天气 ${c.weather}</span>
+        <br>${esc(c.subtitle)}<br><span class="meta">${esc(c.ambience)}</span></div>`).join("");
+    },
+    rhyme() {
+      return `<h2>十个小士兵</h2>` + DATA.rhyme.rhyme.lines.map(l => `
+        <div class="card"><b>${l.index}.</b> ${esc(l.text)}<br>
+        <span class="meta">→ ${esc(l.victimId)} · 第 ${l.chapter} 章 · ${esc(l.hint)}</span></div>`).join("");
+    },
+    accusation() {
+      const a = DATA.accusation.accusation;
+      return `<h2>留声机指控（第 ${a.chapter} 章）</h2>
+        <div class="card"><i>${esc(a.scriptIntro)}</i></div>` +
+        a.charges.map((c,i) => `<div class="card charge"><b>${i+1}. [${esc(c.targetId)}]</b> ${esc(c.text)}</div>`).join("") +
+        `<div class="card"><i>${esc(a.scriptOutro)}</i></div><p class="meta">${esc(a.note)}</p>`;
+    },
+    characters() {
+      return `<h2>人物档案（11）</h2><table><tr><th>角色</th><th>身份</th><th>指控</th><th>死亡</th></tr>` +
+        DATA.characters.characters.map(c => `<tr><td><b>${esc(c.name)}</b><br><span class="meta">${esc(c.fullName)}</span></td>
+          <td>${esc(c.role)}<br><span class="meta">${esc(c.appearance)}</span></td>
+          <td>${esc(c.accusation)}</td>
+          <td>${c.death ? `第 ${c.death.chapter} 章 · ${esc(c.death.method)}` : "—"}</td></tr>`).join("") + `</table>`;
+    },
+    deaths() {
+      return `<h2>死亡事件（10）</h2>` + DATA.deaths.deaths.map(d => `
+        <div class="card charge"><b>第 ${d.chapter} 章 · ${esc(d.victimId)} · ${esc(d.method)}</b> <span class="meta">[${d.presentation}]</span><br>
+        现场：${esc(d.scene)}<br>发现：${esc(d.discover)}<br><span class="meta">线索：${d.clueIds.join(", ")}${d.note ? " · 注：" + esc(d.note) : ""}</span></div>`).join("");
+    },
+    clues() {
+      const chainName = id => DATA.clues.chains[id] ? DATA.clues.chains[id].name : id;
+      return `<h2>线索（13）</h2>` + DATA.clues.clues.map(c => `
+        <div class="card"><b>${esc(c.id)} · ${esc(c.name)}</b> <span class="meta">第 ${c.chapter} 章 · 链 ${c.chain}（${chainName(c.chain)}）</span><br>${esc(c.note)}</div>`).join("") +
+        `<h3>推理链</h3>` + Object.entries(DATA.clues.chains).map(([k,v]) =>
+          `<div class="card"><b>链 ${k} · ${esc(v.name)}</b><br>${esc(v.desc)}</div>`).join("");
+    },
+    dialogues() {
+      const total = Object.values(DATA.dialogues).reduce((s,d) => s + Object.values(d.chapters).reduce((a,c) => a + c.nodes.length, 0), 0);
+      return `<h2>对话树（共 ${total} 节点）</h2>
+        <select id="selNpc" onchange="renderDlg()">${npcs.map(n => `<option value="${n}">${n}</option>`).join("")}</select>
+        <select id="selCh" onchange="renderDlg()"></select>
+        <div id="dlg"></div>`;
+    },
+    confession() {
+      const c = DATA.confession.confession;
+      return `<h2>${esc(c.title)}</h2><p class="meta">署名：${esc(c.author)} · ${esc(c.note)}</p>` +
+        c.segments.map(s => `<div class="card"><h3 style="margin-top:0">${esc(s.title)}</h3>${esc(s.text)}<br>
+          <span class="meta">闪回：${esc(s.echoId)}</span></div>`).join("");
+    },
+    endings() {
+      return `<h2>结局（4）</h2>` + DATA.endings.endings.map(e => `
+        <div class="card"><b>${esc(e.title)}</b><br><span class="meta">条件：${esc(e.condition)}</span>
+        ${e.subtitles.map(s => `<br>· ${esc(s)}`).join("")}</div>`).join("");
+    },
+    ui() {
+      return `<h2>系统 UI 文案</h2>` + Object.entries(DATA.ui.ui).map(([grp, kv]) =>
+        `<h3>${esc(grp)}</h3>` + Object.entries(kv).map(([k,v]) =>
+          `<div class="card"><span class="meta">${esc(k)}</span> — ${esc(v)}</div>`).join("")).join("");
+    }
+  };
+  m.innerHTML = R[k] ? R[k]() : "";
+  if (k === "dialogues") renderDlg();
+}
+
+function renderDlg() {
+  const npc = document.getElementById("selNpc").value;
+  const chs = Object.keys(DATA.dialogues[npc].chapters);
+  const selCh = document.getElementById("selCh");
+  if (!selCh.dataset.npc || selCh.dataset.npc !== npc) {
+    selCh.innerHTML = chs.map(c => `<option value="${c}">第 ${c} 章</option>`).join("");
+    selCh.dataset.npc = npc;
+  }
+  const ch = selCh.value || chs[0];
+  const nodes = DATA.dialogues[npc].chapters[ch].nodes;
+  document.getElementById("dlg").innerHTML = nodes.map(n => `
+    <div class="card ${n.type === "echo" ? "echo" : ""}"><span class="meta">${esc(n.id)}${n.type ? " · " + n.type : ""}${n.flag ? " · flag:" + n.flag : ""}</span><br>${esc(n.text)}
+    ${(n.choices || []).map(c => `<div class="choice">↳ ${esc(c.label)}${c.requireClue ? ` <span class="warn">[需 ${c.requireClue}]</span>` : ""} → ${c.next ?? "结束"}</div>`).join("")}
+    ${n.next !== undefined ? `<div class="choice">→ ${n.next ?? "结束"}</div>` : ""}</div>`).join("");
+}
+
+boot();
+</script>
+</body>
+</html>

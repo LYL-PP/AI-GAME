@@ -1,0 +1,18 @@
+{
+  "rhyme": {
+    "title": "十个小士兵",
+    "note": "大纲 4.4 公版“士兵版”全新中译，为本项目专用文本。",
+    "lines": [
+      { "index": 1, "text": "十个小士兵，结伴去吃饭；一个呛住了，十人只剩九。", "victimId": "marston", "chapter": 1, "hint": "毒酒呛喉" },
+      { "index": 2, "text": "九个小士兵，熬夜不肯眠；一个睡过头，九人只剩八。", "victimId": "mrs_rogers", "chapter": 2, "hint": "长眠不醒" },
+      { "index": 3, "text": "八个小士兵，远行到德文；一个留下来，八人只剩七。", "victimId": "macarthur", "chapter": 3, "hint": "留守岬角" },
+      { "index": 4, "text": "七个小士兵，抡斧把柴劈；一斧劈自身，七人只剩六。", "victimId": "rogers", "chapter": 4, "hint": "斧杀" },
+      { "index": 5, "text": "六个小士兵，捅了马蜂窝；蜂针蜇一个，六人只剩五。", "victimId": "brent", "chapter": 5, "hint": "毒针与蜂" },
+      { "index": 6, "text": "五个小士兵，高坐法官席；一个入法网，五人只剩四。", "victimId": "wargrave", "chapter": 6, "hint": "“枪决”（假死）" },
+      { "index": 7, "text": "四个小士兵，扬帆出大海；红鲱鱼吞一个，四人只剩三。", "victimId": "armstrong", "chapter": 7, "hint": "溺亡（红鲱鱼＝障眼法）" },
+      { "index": 8, "text": "三个小士兵，动物园里走；大熊抱一个，三人只剩二。", "victimId": "blore", "chapter": 8, "hint": "熊钟坠杀" },
+      { "index": 9, "text": "两个小士兵，烈日底下坐；一个被晒焦，二人只剩一。", "victimId": "lombard", "chapter": 9, "hint": "海滩枪杀" },
+      { "index": 10, "text": "一个小士兵，孑然一身孤；悬梁了此生，一个也不剩。", "victimId": "vera", "chapter": 10, "hint": "自缢" }
+    ]
+  }
+}
