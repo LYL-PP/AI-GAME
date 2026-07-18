@@ -30,7 +30,7 @@ export class Emptiness {
     b.box(0.34, 0.2, 0.14, 0, 0.1, 0);
     b.box(0.02, 0.28, 0.02, 0.12, 0.3, 0);
     this.radio = b.mesh(MAT.woodDark, { cast: true });
-    this.radio.position.set(1.2, 1.3, 97);
+    this.radio.position.set(1.3, 1.35, 50);
     this.scene.add(this.radio);
     this.radioUsed = false;
   }

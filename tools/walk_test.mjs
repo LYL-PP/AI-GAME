@@ -42,7 +42,7 @@ const TEST = `(async () => {
     out.push({ name, y: s.y, expectY, ok });
   };
   // 室外点位
-  await spot('码头', 0, 100, 1.25);
+  await spot('码头', 0, 48, 1.25);
   await spot('北岬角', 0, -76, 1.1, 0.6);
   await spot('柴棚', -18, 3, 1.55, 0.5);
   await spot('海滩', 44, 50, 0.72, 0.5);
@@ -96,11 +96,11 @@ const TEST = `(async () => {
   await sleep(300);
   const sEnd2 = D.getState();
   out.push({ name: '楼梯 L2→L3 平台', y: sEnd2.y, expectY: 8.2, ok: Math.abs(sEnd2.y - 8.2) < 0.3 });
-  // 入海阻挡：码头向南走进海（应被拦在栈道/浅水）
-  D.teleport(0, 94, 0);
+  // 入海阻挡：码头向南走进海（应被拦在栈道南端 z~58）
+  D.teleport(0, 52, 0);
   for (let i = 0; i < 40; i++) { D.move(0, 0.3); await sleep(8); }
   const sSea = D.getState();
-  out.push({ name: '入海阻挡(停于栈道南端)', z: sSea.z, y: sSea.y, ok: sSea.z <= 105 && sSea.y > 0.5 });
+  out.push({ name: '入海阻挡(停于栈道南端)', z: sSea.z, y: sSea.y, ok: sSea.z <= 59.5 && sSea.y > 0.5 });
   // 边界圆柱：向东冲（非码头方向，应被浅水/边界拦下）
   D.teleport(30, 0, 0);
   for (let i = 0; i < 200; i++) { D.move(0.5, 0); await sleep(4); }

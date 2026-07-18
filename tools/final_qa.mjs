@@ -47,7 +47,7 @@ async function main() {
   // ============ 序章全跑 ============
   check('序章 idle', (await evaljs('PrologueAPI.state()')) === 'idle');
   // 序章风暴暗示：码头收音机
-  await evaljs('DebugAPI.teleport(1.2, 97.5, 0, 1.25)');
+  await evaljs('DebugAPI.teleport(1.3, 50, 0, 1.25)');
   await sleep(300);
   await evaljs(`(() => { document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' })); })()`);
   await sleep(500);

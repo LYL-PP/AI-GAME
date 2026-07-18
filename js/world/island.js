@@ -71,6 +71,10 @@ export function groundHeight(x, z) {
   const dshelf = Math.hypot(x + 65, z + 56);
   const sh = smoothstep(5.5, 2.5, dshelf);
   h = h * (1 - sh) + 0.6 * sh;
+  // 南向小海湾（码头内移用）：椭圆水面切入岛南，水深 ~-1.3m，湾口连外海
+  const cove = (x / 10) * (x / 10) + ((z - 56) / 26) * ((z - 56) / 26);
+  const cw = smoothstep(1.05, 0.5, cove);
+  h = h * (1 - cw) + Math.min(h, -1.3) * cw;
   // 别墅地基整平
   const dx = Math.max(VILLA_PAD.x1 - x, 0, x - VILLA_PAD.x2);
   const dz = Math.max(VILLA_PAD.z1 - z, 0, z - VILLA_PAD.z2);
@@ -171,7 +175,7 @@ export function buildIsland(scene, collision, data) {
     const a = Math.random() * Math.PI * 2;
     const r = 88 + Math.random() * 15;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (Math.abs(x) < 4 && z > 78) continue;      // 码头通道留空
+    if (Math.abs(x) < 5 && z > 26 && z < 64) continue;  // 小海湾+码头通道留空
     putRock(x, z, -0.6 + Math.random() * 0.9, 0.6 + Math.random() * 1.6);
   }
   for (let i = 0; i < 25; i++) putRock(-2 + Math.random() * 14 - 7, -78 - Math.random() * 12, -0.4 + Math.random() * 0.8, 0.8 + Math.random() * 2.0); // 北岬角
@@ -198,27 +202,27 @@ export function buildIsland(scene, collision, data) {
   }
   group.add(foam);
 
-  // ---------- 码头（南侧木栈道 + 系船柱） ----------
+  // ---------- 码头（南侧小海湾内木栈道 + 系船柱，距别墅 ~30m） ----------
   const dock = new GeoBatch();
   const deckY = 1.25;
-  for (let z = 82.5; z <= 104; z += 0.62)
+  for (let z = 33.5; z <= 58; z += 0.62)
     dock.box(3.0, 0.1, 0.5, 0, deckY - 0.05, z);                       // 木板
-  dock.box(0.25, 0.22, 22, -1.35, deckY - 0.2, 93.2);                  // 纵梁
-  dock.box(0.25, 0.22, 22, 1.35, deckY - 0.2, 93.2);
-  for (let z = 84; z <= 103; z += 3.2) {                               // 桩
+  dock.box(0.25, 0.22, 24.5, -1.35, deckY - 0.2, 45.8);                // 纵梁
+  dock.box(0.25, 0.22, 24.5, 1.35, deckY - 0.2, 45.8);
+  for (let z = 35; z <= 57; z += 3.2) {                                // 桩（打入湾水）
     dock.box(0.22, 3.4, 0.22, -1.35, deckY - 1.8, z);
     dock.box(0.22, 3.4, 0.22, 1.35, deckY - 1.8, z);
   }
-  dock.box(0.3, 0.55, 0.3, -1.2, deckY + 0.22, 103);                   // 系船柱
-  dock.box(0.3, 0.55, 0.3, 1.2, deckY + 0.22, 103);
+  dock.box(0.3, 0.55, 0.3, -1.2, deckY + 0.22, 57);                    // 系船柱
+  dock.box(0.3, 0.55, 0.3, 1.2, deckY + 0.22, 57);
   const dockMesh = dock.mesh(MAT.woodDark, { cast: true });
   group.add(dockMesh);
-  collision.addPlatform(-1.5, 82.3, 1.5, 104.5, deckY);
-  collision.addPlatform(-0.8, 81.2, 0.8, 82.4, 0.85);                  // 登栈道台阶
-  collision.addPlatform(-0.8, 80.3, 0.8, 81.3, 0.45);
+  collision.addPlatform(-1.5, 33.2, 1.5, 58.5, deckY);
+  collision.addPlatform(-0.8, 32.0, 0.8, 33.3, 0.9);                   // 登栈道台阶
+  collision.addPlatform(-0.8, 30.9, 0.8, 32.1, 0.5);
   const stepB = new GeoBatch();
-  stepB.box(1.6, 0.42, 1.2, 0, 0.64, 82.0);
-  stepB.box(1.6, 0.42, 1.1, 0, 0.22, 80.9);
+  stepB.box(1.6, 0.42, 1.2, 0, 0.72, 32.6);
+  stepB.box(1.6, 0.42, 1.1, 0, 0.3, 31.5);
   group.add(stepB.mesh(MAT.trim, { cast: true }));
 
   // ---------- 柴棚（别墅西侧：斜顶木棚 + 柴堆 + 斧头） ----------
@@ -317,15 +321,25 @@ export function buildIsland(scene, collision, data) {
     sign.rotation.y = Math.atan2(-(x + signDX), -(z + signDZ)); // 面向岛心
     group.add(sign);
   };
-  addPoi('dock', 0, 96, 2.2, -5.5);
+  addPoi('dock', 0, 46, 2.2, -10.5);
   addPoi('cape_north', 0, -76, 1.6, 1.4);
   addPoi('woodshed', shedX, shedZ, 2.2, -1.8);
   addPoi('beach', 44, 50, -1.8, 1.6);
   addPoi('cliff_path', -14, -20, 1.2, 1.4);
   addPoi('lone_tree', trX, trZ, 1.6, 1.2);
 
+  // ---------- 沿途点缀（湾岸木桩 ×3，不挡路） ----------
+  for (const [px, pz] of [[10.8, 34], [11.2, 48], [-10.8, 44]]) {
+    const pile = new THREE.Mesh(new THREE.BoxGeometry(0.32, 2.2, 0.32), MAT.woodDark);
+    pile.position.set(px, groundHeight(px, pz) + 0.9, pz);
+    pile.rotation.y = px * 0.7;
+    pile.castShadow = true;
+    group.add(pile);
+    collision.addBox(px - 0.18, groundHeight(px, pz), pz - 0.18, px + 0.18, groundHeight(px, pz) + 2.2, pz + 0.18);
+  }
+
   return {
     group, pois, groundHeight, seaUniforms, seaMat,
-    spawn: { x: 0, z: 100, yaw: 0 },   // 码头出生，面朝别墅（-Z）
+    spawn: { x: 0, z: 48, yaw: 0 },   // 新码头出生（湾中栈道），面朝别墅（-Z）
   };
 }
