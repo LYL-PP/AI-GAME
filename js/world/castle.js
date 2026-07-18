@@ -1,7 +1,14 @@
-// castle.js —— Kenney Retro Fantasy Kit（CC0）城堡外壳组装
-// 只包外立面：四角塔楼 + 石墙五层 + 顶部雉堞 + 南门 gate；内部布局/碰撞布局不变
+// castle.js —— 城堡外壳：优先扫描级 castle.glb（scanCastle.js），失败回退 Kenney Retro Fantasy Kit（CC0）组装
+// Kenney 版只包外立面：四角塔楼 + 石墙五层 + 顶部雉堞 + 南门 gate；内部布局/碰撞布局不变
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { buildScanCastle } from './scanCastle.js';
+
+export async function buildCastleShell(scene, collision) {
+  const scan = await buildScanCastle(scene, collision);
+  if (scan) return scan;
+  return buildKenneyShell(scene, collision);
+}
 
 const BASE = 'assets/models/castle/';
 const FILES = {
@@ -72,7 +79,7 @@ function mergeGeos(list) {
   return out;
 }
 
-export async function buildCastleShell(scene, collision) {
+export async function buildKenneyShell(scene, collision) {
   const loader = new GLTFLoader();
   const models = {};
   try {

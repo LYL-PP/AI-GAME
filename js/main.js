@@ -97,7 +97,11 @@ async function boot() {
   collision.boundaryRadius = 95;
   const island = buildIsland(scene, collision, data);
   collision.setGroundFunction(island.groundHeight);
-  const villa = buildVilla(scene, collision, data);
+  // 扫描大厅：先探载 hall.glb（失败则 villa 按原样构建程序化大厅）
+  const { preloadHallScan, buildHallScan } = await import('./world/hallScan.js');
+  const hallScanOk = await preloadHallScan();
+  const villa = buildVilla(scene, collision, data, { hallScan: hallScanOk });
+  const hallScanGroup = hallScanOk ? buildHallScan(scene) : null;
 
   // 城堡外壳（Kenney CC0；失败兜底保留程序化外墙）
   let castleRefs = null;
@@ -558,6 +562,8 @@ async function boot() {
     clues.update(dt, player.feet.x, player.feet.y, player.feet.z);
     npcManager.update(dt, performance.now() / 1000, player.feet);
     weather.update(dt, camera.position, insideVilla());
+    // 扫描大厅室外剔除（236k 面室内专用，出别墅即隐藏）
+    if (hallScanGroup) hallScanGroup.visible = insideVilla();
     // 引导箭头
     const gt = chapterManager.guideTarget;
     if (gt && !prologue.cineActive && !figurines.active) {

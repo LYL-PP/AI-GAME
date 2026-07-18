@@ -11,9 +11,11 @@ const T1 = 4.75, T2 = 7.95, T3 = 11.15;      // 各层墙顶标高
 const ROOF = 11.45;
 const EXT = 0.35, INT = 0.2;                 // 外墙/内墙厚度
 
-export function buildVilla(scene, collision, data) {
+export function buildVilla(scene, collision, data, opts = {}) {
   const g = new THREE.Group();
   scene.add(g);
+  const HALL_SCAN = !!opts.hallScan;   // 大厅区域由 hall.glb 扫描件呈现
+  const nullBatch = { box: () => {}, add: () => {} }; // 仅走碰撞、不出几何
 
   // 批次（合并 → 少量 draw call）
   const ext = new GeoBatch();      // 外墙灰泥
@@ -40,19 +42,19 @@ export function buildVilla(scene, collision, data) {
       if (collide) collision.addBox(at - th / 2, y0, a, at + th / 2, y1, b);
     }
   }
-  // gaps: {a,b,y0,y1,type:'door'|'win'}
-  function wallGaps(batch, axis, at, from, to, y0, y1, th, gaps, out = 1) {
+  // gaps: {a,b,y0,y1,type:'door'|'win'}；collide=false 时只出几何不加碰撞（遮丑盖板用）
+  function wallGaps(batch, axis, at, from, to, y0, y1, th, gaps, out = 1, collide = true) {
     let cur = from;
     const gs = [...gaps].sort((p, q) => p.a - q.a);
     for (const gp of gs) {
-      if (gp.a > cur) wallSeg(batch, axis, at, cur, gp.a, y0, y1, th);
+      if (gp.a > cur) wallSeg(batch, axis, at, cur, gp.a, y0, y1, th, collide);
       const gy0 = gp.y0 ?? y0, gy1 = gp.y1 ?? y1;
-      if (gy0 > y0) wallSeg(batch, axis, at, gp.a, gp.b, y0, gy0, th);
-      if (gy1 < y1) wallSeg(batch, axis, at, gp.a, gp.b, gy1, y1, th);
+      if (gy0 > y0) wallSeg(batch, axis, at, gp.a, gp.b, y0, gy0, th, collide);
+      if (gy1 < y1) wallSeg(batch, axis, at, gp.a, gp.b, gy1, y1, th, collide);
       if (gp.type === 'win') windows.push({ axis, at, a: gp.a, b: gp.b, y0: gy0, y1: gy1, out, porthole: gp.porthole });
       cur = gp.b;
     }
-    if (cur < to) wallSeg(batch, axis, at, cur, to, y0, y1, th);
+    if (cur < to) wallSeg(batch, axis, at, cur, to, y0, y1, th, collide);
   }
   const win = (a, b, y0, y1) => ({ a, b, y0, y1, type: 'win' });
   const door = (a, b, y1) => ({ a, b, y0: undefined, y1, type: 'door' });
@@ -63,7 +65,15 @@ export function buildVilla(scene, collision, data) {
     collision.addPlatform(x1, z1, x2, z2, yTop);
   }
   // 一层
-  slab(wood, -12, -8, 12, 8, F1);
+  if (HALL_SCAN) {
+    // 大厅（-8..8, -2..8）地面由 hall.glb 扫描地板呈现；碰撞平台不变
+    collision.addPlatform(-12, -8, 12, 8, F1);
+    wood.box(24, 0.25, 5.95, 0, F1 - 0.125, -5.025);        // 后廊/厨房/楼梯间（z -8..-2.05）
+    wood.box(3.95, 0.25, 10.05, -10.025, F1 - 0.125, 2.975); // 管家房（x -12..-8.05）
+    wood.box(3.95, 0.25, 10.05, 10.025, F1 - 0.125, 2.975);  // 餐厅（x 8.05..12）
+  } else {
+    slab(wood, -12, -8, 12, 8, F1);
+  }
   slab(trim, -10, 8, 10, 13, F1);                       // 露台（石板）
   // 二层
   slab(wood, -8, -8, 12, 8, F2);                        // 走廊+客房
@@ -101,7 +111,16 @@ export function buildVilla(scene, collision, data) {
       gapsS.push(win(-4.8, -3.2, w0, w1), win(1.2, 2.8, w0, w1));
       gapsE.push(win(-4.6, -3.4, w0, w1));                          // 储藏室窗
     }
-    wallGaps(ext, 'x', 8, -12, 12, fy, ty, EXT, gapsS, 1);    // 南
+    if (HALL_SCAN && fy === F1) {
+      // 扫描大厅：南墙 F1 段（-8..8 大厅面）视觉隐藏（碰撞保留），由 hall.glb 立面 + 遮丑盖板接替
+      wallGaps(ext, 'x', 8, -12, -8, fy, ty, EXT, [win(-10.6, -9.4, w0, w1)], 1);
+      wallGaps(nullBatch, 'x', 8, -8, 8, fy, ty, EXT, [door(-0.9, 0.9, fy + 2.35), door(-5.5, -3.5, fy + 2.3), door(3.5, 5.5, fy + 2.3)], 1);
+      wallGaps(ext, 'x', 8, 8, 12, fy, ty, EXT, [win(9.2, 10.8, w0, w1)], 1);
+      // 外侧遮丑盖板（plaster 同色，门洞对齐；遮住扫描件白壳）
+      wallGaps(ext, 'x', 7.95, -8, 8, fy, ty, 0.2, [door(-0.9, 0.9, fy + 2.35)], 1, false);
+    } else {
+      wallGaps(ext, 'x', 8, -12, 12, fy, ty, EXT, gapsS, 1);    // 南
+    }
     wallGaps(ext, 'x', -8, -12, 12, fy, ty, EXT, gapsN, -1);  // 北
     wallGaps(ext, 'z', 12, -8, 8, fy, ty, EXT, gapsE, 1);     // 东
     wallGaps(ext, 'z', -12, -8, 8, fy, ty, EXT, gapsW, -1);   // 西
@@ -109,10 +128,21 @@ export function buildVilla(scene, collision, data) {
   // 修正：外墙洞口补上「舷窗」方洞不应贯通 —— door 类型已贯通，舷窗洞用 glass 封住即可（视觉）
 
   // ---------- 一层内墙 ----------
-  wallGaps(intw, 'x', -2, -8, 8, F1, T1, INT, [door(-2.5, 2.5, F1 + 2.5)]);       // 大厅|后廊
-  wallGaps(intw, 'z', -8, -2, 2, F1, T1, INT, [door(1.0, 1.9, F1 + 2.1)]);        // 大厅|楼梯间
-  wallGaps(intw, 'z', -8, 2, 8, F1, T1, INT, [door(4.6, 5.6, F1 + 2.1)]);         // 大厅|管家房
-  wallGaps(intw, 'z', 8, -2, 8, F1, T1, INT, [door(2.4, 4.9, F1 + 2.5)]);         // 大厅|餐厅
+  if (HALL_SCAN) {
+    // 大厅四壁视觉隐藏（碰撞保留），由 hall.glb 墙面呈现；邻室侧加深色盖板遮扫描件白壳
+    wallGaps(nullBatch, 'x', -2, -8, 8, F1, T1, INT, [door(-2.5, 2.5, F1 + 2.5)]);   // 大厅|后廊
+    wallGaps(nullBatch, 'z', -8, -2, 2, F1, T1, INT, [door(1.0, 1.9, F1 + 2.1)]);    // 大厅|楼梯间
+    wallGaps(nullBatch, 'z', -8, 2, 8, F1, T1, INT, [door(4.6, 5.6, F1 + 2.1)]);     // 大厅|管家房
+    wallGaps(nullBatch, 'z', 8, -2, 8, F1, T1, INT, [door(2.4, 4.9, F1 + 2.5)]);     // 大厅|餐厅
+    wallGaps(intw, 'x', -2.35, -8, 8, F1, T1, 0.16, [door(-2.5, 2.5, F1 + 2.5)], 1, false);  // 后廊侧盖板
+    wallGaps(intw, 'z', -8.35, -2, 8, F1, T1, 0.16, [door(1.0, 1.9, F1 + 2.1), door(4.6, 5.6, F1 + 2.1)], 1, false); // 楼梯间/管家房侧盖板
+    wallGaps(intw, 'z', 8.35, -2, 8, F1, T1, 0.16, [door(2.4, 4.9, F1 + 2.5)], 1, false);    // 餐厅侧盖板
+  } else {
+    wallGaps(intw, 'x', -2, -8, 8, F1, T1, INT, [door(-2.5, 2.5, F1 + 2.5)]);       // 大厅|后廊
+    wallGaps(intw, 'z', -8, -2, 2, F1, T1, INT, [door(1.0, 1.9, F1 + 2.1)]);        // 大厅|楼梯间
+    wallGaps(intw, 'z', -8, 2, 8, F1, T1, INT, [door(4.6, 5.6, F1 + 2.1)]);         // 大厅|管家房
+    wallGaps(intw, 'z', 8, -2, 8, F1, T1, INT, [door(2.4, 4.9, F1 + 2.5)]);         // 大厅|餐厅
+  }
   wallGaps(intw, 'z', 8, -8, -2, F1, T1, INT, [door(-5.4, -4.4, F1 + 2.1)]);      // 后廊|厨房
   wallSeg(intw, 'x', -2, 8, 12, F1, T1, INT);                                     // 餐厅|厨房
   wallSeg(intw, 'x', 2, -12, -8, F1, T1, INT);                                    // 管家房|楼梯间
@@ -212,6 +242,7 @@ export function buildVilla(scene, collision, data) {
   logB.box(0.7, 0.12, 0.12, -5.0, F1 + 0.22, -1.55, -0.25);
   g.add(logB.mesh(MAT.woodDark));
   collision.addBox(-6.6, F1, -2.05, -3.4, F1 + 1.35, -1.1); // 壁炉占位
+  if (HALL_SCAN) collision.addBox(-6.6, F1, -1.9, -3.4, F1 + 2.6, -0.8); // 扫描壁炉凸台（挑入大厅部分）
   // 10 个瓷人空位底座
   const bases = figurineBases();
   bases.position.set(-5.0, F1 + 1.955, -1.55);
@@ -256,13 +287,33 @@ export function buildVilla(scene, collision, data) {
     collision.addBox(ax - 0.45, F1, az - 0.45, ax + 0.45, F1 + 0.9, az + 0.45);
   }
   carpet.box(5.5, 0.02, 4.2, 0.5, F1 + 0.012, 4.0);
-  // 吊灯（Deco 阶梯铜灯）
-  const chand = new GeoBatch();
-  chand.box(0.5, 0.1, 0.5, 0.5, F1 + 2.35, 4.0);
-  chand.box(0.34, 0.1, 0.34, 0.5, F1 + 2.24, 4.0);
-  chand.box(0.2, 0.1, 0.2, 0.5, F1 + 2.13, 4.0);
-  const chandM = chand.mesh(MAT.brass);
-  g.add(chandM);
+  // 吊灯（Deco 阶梯铜灯；扫描大厅改用大吊灯罩遮扫描碎裂吊灯簇）
+  if (!HALL_SCAN) {
+    const chand = new GeoBatch();
+    chand.box(0.5, 0.1, 0.5, 0.5, F1 + 2.35, 4.0);
+    chand.box(0.34, 0.1, 0.34, 0.5, F1 + 2.24, 4.0);
+    chand.box(0.2, 0.1, 0.2, 0.5, F1 + 2.13, 4.0);
+    const chandM = chand.mesh(MAT.brass);
+    g.add(chandM);
+  }
+  if (HALL_SCAN) {
+    // 大吊灯罩（深色三层盘 + 吊杆，底沿 >1.9m 离地净高）：替代被切除的扫描吊灯
+    const fix = new GeoBatch();
+    fix.add(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), new THREE.Matrix4().setPosition(0, F1 + 2.6, 2.9));
+    fix.add(new THREE.CylinderGeometry(0.95, 0.95, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.25, 2.9));
+    fix.add(new THREE.CylinderGeometry(0.68, 0.68, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.02, 2.9));
+    fix.add(new THREE.CylinderGeometry(0.45, 0.45, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 1.8, 2.9));
+    g.add(fix.mesh(MAT.ironDark));
+    // 入口门斗暗廊（遮扫描南墙无门洞：别墅门 → 暗廊 → 大厅）
+    intw.box(0.12, 2.7, 1.35, -0.86, F1 + 1.35, 7.4);   // 左帮
+    intw.box(0.12, 2.7, 1.35, 0.86, F1 + 1.35, 7.4);    // 右帮
+    intw.box(1.85, 0.15, 1.35, 0, F1 + 2.62, 7.4);      // 顶板
+    trim.box(0.18, 2.5, 0.18, -0.82, F1 + 1.25, 6.82);  // 门斗框柱
+    trim.box(0.18, 2.5, 0.18, 0.82, F1 + 1.25, 6.82);
+    trim.box(1.85, 0.22, 0.18, 0, F1 + 2.55, 6.82);     // 门斗楣
+    collision.addBox(-0.95, F1, 6.7, -0.78, F1 + 2.7, 8.05);
+    collision.addBox(0.78, F1, 6.7, 0.95, F1 + 2.7, 8.05);
+  }
 
   // ---------- 餐厅 ----------
   wood.box(2.6, 0.08, 1.15, 10, F1 + 0.74, 3.0);
