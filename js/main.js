@@ -95,6 +95,21 @@ async function boot() {
   // ---------- 世界 ----------
   const collision = new CollisionWorld();
   collision.boundaryRadius = 95;
+  // 录制动线道具预载（失败件回退程序化占位；须先于 buildIsland/buildVilla）
+  const { preloadSceneProps } = await import('./world/sceneProps.js');
+  await preloadSceneProps({
+    gramophone: 'assets/models/scene/gramophone.glb',
+    figurine: 'assets/models/scene/figurine.glb',
+    dining_table: 'assets/models/scene/dining_table.glb',
+    dining_chair: 'assets/models/scene/dining_chair.glb',
+    candelabra: 'assets/models/scene/candelabra.glb',
+    chandelier: 'assets/models/scene/chandelier.glb',
+    rug: 'assets/models/scene/rug.glb',
+    jetty: 'assets/models/scene/jetty.glb',
+    rock1: 'assets/models/scene/rock1.glb',
+    rock2: 'assets/models/scene/rock2.glb',
+    grass: 'assets/models/scene/grass.glb',
+  });
   const island = buildIsland(scene, collision, data);
   collision.setGroundFunction(island.groundHeight);
   // 扫描大厅：先探载 hall.glb（失败则 villa 按原样构建程序化大厅）

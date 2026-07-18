@@ -5,6 +5,7 @@ import {
   GeoBatch, MAT, textPanel, figurineBases, gramophone, marbleStatue,
   bearClock, armchair, bedGeometries, chairGeometry, deskGeometry, nightstandGeometry,
 } from './props.js';
+import { getParts, buildProp, decimate } from './sceneProps.js';
 
 const F1 = 1.8, F2 = 5.0, F3 = 8.2;          // 各层地面标高
 const T1 = 4.75, T2 = 7.95, T3 = 11.15;      // 各层墙顶标高
@@ -219,56 +220,91 @@ export function buildVilla(scene, collision, data, opts = {}) {
   // 梯下区域由实心阶梯体自然封挡，无需额外封墙
 
   // ---------- 壁炉 + 烟囱 + 壁炉台（10 瓷人空位） ----------
-  trim.box(1.0, 1.35, 0.85, -6.1, F1 + 0.675, -1.55);   // 左柱
-  trim.box(1.0, 1.35, 0.85, -3.9, F1 + 0.675, -1.55);   // 右柱
-  trim.box(3.2, 0.5, 0.85, -5.0, F1 + 1.6, -1.55);      // 楣
-  trim.box(3.2, 0.35, 0.2, -5.0, F1 + 0.175, -1.95);    // 前裙
-  marble.box(3.5, 0.11, 0.95, -5.0, F1 + 1.9, -1.55);   // 壁炉台面
-  ext.box(2.8, ROOF + 0.9 - F1, 1.0, -5.0, (F1 + ROOF + 0.9) / 2, -2.1); // 烟囱体
+  // fireplace.glb（大理石壁炉含炉膛火光）：替换下部建筑（柱/楣/裙/烟囱/炉膛/柴火/火苗）；
+  // 台面/瓷人/烛台/童谣牌/火光照明全部保留（结算特写锚点 MANTEL 不变）
+  const fireParts = getParts('fireplace');
+  const useGLBFire = HALL_SCAN && fireParts;
+  if (!useGLBFire) {
+    trim.box(1.0, 1.35, 0.85, -6.1, F1 + 0.675, -1.55);   // 左柱
+    trim.box(1.0, 1.35, 0.85, -3.9, F1 + 0.675, -1.55);   // 右柱
+    trim.box(3.2, 0.5, 0.85, -5.0, F1 + 1.6, -1.55);      // 楣
+    trim.box(3.2, 0.35, 0.2, -5.0, F1 + 0.175, -1.95);    // 前裙
+    ext.box(2.8, ROOF + 0.9 - F1, 1.0, -5.0, (F1 + ROOF + 0.9) / 2, -2.1); // 烟囱体
+    trim.box(3.2, 0.25, 1.4, -5.0, ROOF + 1.05, -2.1);    // 烟囱帽
+    intw.box(1.8, 1.1, 0.15, -5.0, F1 + 0.55, -1.95);     // 炉膛暗腔
+  } else {
+    const fp = buildProp(fireParts, { decimateN: 2, tint: [0.82, 0.79, 0.74], castShadow: true });
+    fp.scale.set(1.2, 1.45, 1.1);   // 2.4×1.88×0.82，顶平贴台面底（F1+1.88）
+    fp.position.set(-5.0, F1 + 0.94, -0.75);   // 扫描北墙面 z≈-0.92（实测），整组前挑
+    g.add(fp);
+  }
+  marble.box(3.5, 0.11, 0.95, -5.0, F1 + 1.9, -0.5);   // 壁炉台面（瓷人列位，前挑）
   collision.addBox(-6.4, F1, -2.6, -3.6, ROOF + 0.9, -1.6);
-  trim.box(3.2, 0.25, 1.4, -5.0, ROOF + 1.05, -2.1);    // 烟囱帽
-  // 炉膛（暗腔 + 柴火 + 火光发光体）
-  intw.box(1.8, 1.1, 0.15, -5.0, F1 + 0.55, -1.95);
   const fireGlow = new THREE.MeshBasicMaterial({ color: 0xff8f3f });
   const flames = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 3 && !useGLBFire; i++) {
     const f = new THREE.Mesh(new THREE.ConeGeometry(0.13 - i * 0.025, 0.5 - i * 0.08, 6), fireGlow);
     f.position.set(-5.0 + (i - 1) * 0.22, F1 + 0.45, -1.6);
     flames.push(f);
     g.add(f);
   }
-  const logB = new GeoBatch();
-  logB.box(0.7, 0.12, 0.12, -5.0, F1 + 0.14, -1.6, 0.3);
-  logB.box(0.7, 0.12, 0.12, -5.0, F1 + 0.22, -1.55, -0.25);
-  g.add(logB.mesh(MAT.woodDark));
-  collision.addBox(-6.6, F1, -2.05, -3.4, F1 + 1.35, -1.1); // 壁炉占位
-  if (HALL_SCAN) collision.addBox(-6.6, F1, -1.9, -3.4, F1 + 2.6, -0.8); // 扫描壁炉凸台（挑入大厅部分）
+  if (!useGLBFire) {
+    const logB = new GeoBatch();
+    logB.box(0.7, 0.12, 0.12, -5.0, F1 + 0.14, -1.6, 0.3);
+    logB.box(0.7, 0.12, 0.12, -5.0, F1 + 0.22, -1.55, -0.25);
+    g.add(logB.mesh(MAT.woodDark));
+  }
+  collision.addBox(-6.6, F1, -1.3, -3.4, F1 + 1.35, -0.2); // 壁炉占位（前挑后）
+  if (HALL_SCAN) {
+    collision.addBox(-6.6, F1, -1.9, -3.4, F1 + 2.6, -0.8); // 扫描壁炉凸台（挑入大厅部分）
+    collision.addBox(-1.0, F1, -1.85, 3.6, F1 + 2.6, -0.2); // 扫描大壁炉凸台（面 z≈-0.23，不入走廊）
+  }
   // 10 个瓷人空位底座
   const bases = figurineBases();
-  bases.position.set(-5.0, F1 + 1.955, -1.55);
+  bases.position.set(-5.0, F1 + 1.955, -0.5);
   g.add(bases);
-  // 蜡烛（烛台 + 火苗发光体）
+  // 蜡烛（candelabra.glb 烛台 ×3；失败回退程序化烛签）
   const candleFlames = [];
-  for (const [cx, cy, cz] of [[-6.3, F1 + 1.955, -1.55], [-3.7, F1 + 1.955, -1.55], [2.5, F1 + 0.86, 4.0]]) {
-    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.22, 8), MAT.porcelain);
-    stick.position.set(cx, cy + 0.11, cz);
+  const candParts = getParts('candelabra');
+  for (const [cx, cy, cz] of [[-6.3, F1 + 1.955, -0.5], [-3.7, F1 + 1.955, -0.5], [2.5, F1 + 0.86, 4.0]]) {
+    if (candParts) {
+      const cd = buildProp(candParts, { tint: [0.6, 0.55, 0.48], castShadow: false });
+      cd.scale.setScalar(0.9);   // ~0.34m 高
+      cd.position.set(cx, cy, cz);
+      g.add(cd);
+    } else {
+      const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.22, 8), MAT.porcelain);
+      stick.position.set(cx, cy + 0.11, cz);
+      g.add(stick);
+    }
     const fl = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.09, 6), fireGlow);
-    fl.position.set(cx, cy + 0.27, cz);
+    fl.position.set(cx, cy + (candParts ? 0.34 : 0.27), cz);
     candleFlames.push(fl);
-    g.add(stick, fl);
+    g.add(fl);
   }
 
   // ---------- 大厅家具 ----------
-  // 圆形餐桌 + 11 把椅子
-  wood.box(0.24, 0.72, 0.24, 2.5, F1 + 0.36, 4.0);
-  marble.box(0.9, 0.06, 0.9, 2.5, F1 + 0.06, 4.0);
-  const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.07, 24), MAT.redWood);
-  tableTop.position.set(2.5, F1 + 0.78, 4.0);
-  tableTop.castShadow = true;
-  g.add(tableTop);
+  // 圆形餐桌（dining_table.glb；失败回退程序化占位）+ 11 把椅子
+  const tableParts = getParts('dining_table');
+  if (tableParts) {
+    const t = buildProp(tableParts, { tint: [0.62, 0.56, 0.5], castShadow: true });
+    t.scale.set(1.5, 0.76, 1.5);   // 直径 3.0、桌面高 0.78（与 11 座坐标系/餐盘位一致）
+    t.position.set(2.5, F1, 4.0);
+    g.add(t);
+  } else {
+    wood.box(0.24, 0.72, 0.24, 2.5, F1 + 0.36, 4.0);
+    marble.box(0.9, 0.06, 0.9, 2.5, F1 + 0.06, 4.0);
+    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.07, 24), MAT.redWood);
+    tableTop.position.set(2.5, F1 + 0.78, 4.0);
+    tableTop.castShadow = true;
+    g.add(tableTop);
+  }
   collision.addBox(1.0, F1, 2.5, 4.0, F1 + 0.85, 5.5);
-  // 留声机
-  const gram = gramophone();
+  // 留声机（gramophone.glb 扫描件；失败回退程序化）
+  const gramParts = getParts('gramophone');
+  const gram = gramParts
+    ? buildProp(gramParts, { tint: [0.72, 0.66, 0.58], castShadow: true })
+    : gramophone();
   gram.position.set(4.6, F1, -0.9);
   gram.rotation.y = -0.7;
   g.add(gram);
@@ -286,7 +322,16 @@ export function buildVilla(scene, collision, data, opts = {}) {
     g.add(ac);
     collision.addBox(ax - 0.45, F1, az - 0.45, ax + 0.45, F1 + 0.9, az + 0.45);
   }
-  carpet.box(5.5, 0.02, 4.2, 0.5, F1 + 0.012, 4.0);
+  // 地毯（rug.glb 波斯毯，遮扫描地板孔洞；失败回退程序化毯）
+  const rugParts = getParts('rug');
+  if (HALL_SCAN && rugParts) {
+    const r = buildProp(rugParts, { tint: [0.52, 0.44, 0.44], receiveShadow: true });
+    r.scale.set(1.35, 1, 0.65);   // ~4.2×4.2m，圆桌区
+    r.position.set(0.5, F1 + 0.002, 4.0);
+    g.add(r);
+  } else {
+    carpet.box(5.5, 0.02, 4.2, 0.5, F1 + 0.012, 4.0);
+  }
   // 吊灯（Deco 阶梯铜灯；扫描大厅改用大吊灯罩遮扫描碎裂吊灯簇）
   if (!HALL_SCAN) {
     const chand = new GeoBatch();
@@ -297,13 +342,22 @@ export function buildVilla(scene, collision, data, opts = {}) {
     g.add(chandM);
   }
   if (HALL_SCAN) {
-    // 大吊灯罩（深色三层盘 + 吊杆，底沿 >1.9m 离地净高）：替代被切除的扫描吊灯
-    const fix = new GeoBatch();
-    fix.add(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), new THREE.Matrix4().setPosition(0, F1 + 2.6, 2.9));
-    fix.add(new THREE.CylinderGeometry(0.95, 0.95, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.25, 2.9));
-    fix.add(new THREE.CylinderGeometry(0.68, 0.68, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.02, 2.9));
-    fix.add(new THREE.CylinderGeometry(0.45, 0.45, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 1.8, 2.9));
-    g.add(fix.mesh(MAT.ironDark));
+    // 大厅顶灯（chandelier.glb，139 mesh 合并减面；净高 ≥2.2m；失败回退深色吊灯罩）
+    const chandParts = getParts('chandelier');
+    if (chandParts) {
+      const ch = buildProp(chandParts, { decimateN: 3, tint: [0.55, 0.5, 0.45], castShadow: false });
+      ch.scale.setScalar(0.15);
+      ch.position.set(0, F1 + 2.575, 2.9);   // 底沿 4.0m（净高 2.2m）、顶 4.94m < 楼板 5.0
+      g.add(ch);
+    } else {
+      // 大吊灯罩（深色三层盘 + 吊杆，底沿 >1.9m 离地净高）：替代被切除的扫描吊灯
+      const fix = new GeoBatch();
+      fix.add(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), new THREE.Matrix4().setPosition(0, F1 + 2.6, 2.9));
+      fix.add(new THREE.CylinderGeometry(0.95, 0.95, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.25, 2.9));
+      fix.add(new THREE.CylinderGeometry(0.68, 0.68, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 2.02, 2.9));
+      fix.add(new THREE.CylinderGeometry(0.45, 0.45, 0.09, 16), new THREE.Matrix4().setPosition(0, F1 + 1.8, 2.9));
+      g.add(fix.mesh(MAT.ironDark));
+    }
     // 入口门斗暗廊（遮扫描南墙无门洞：别墅门 → 暗廊 → 大厅）
     intw.box(0.12, 2.7, 1.35, -0.86, F1 + 1.35, 7.4);   // 左帮
     intw.box(0.12, 2.7, 1.35, 0.86, F1 + 1.35, 7.4);    // 右帮
@@ -399,14 +453,29 @@ export function buildVilla(scene, collision, data, opts = {}) {
   }
   cxs.forEach((cx, i) => furnishRoom(cx, false, i));
   cxs.forEach((cx, i) => furnishRoom(cx, true, i + 5));
-  // 大厅圆桌 11 把椅子
+  // 大厅圆桌 11 把椅子（dining_chair.glb InstancedMesh，emptiness 撤椅兼容；失败并入共享 chairs）
+  const chairParts = getParts('dining_chair');
+  let hallChairs = null;
+  if (chairParts) {
+    const cgeo = chairParts[0].geometry;
+    decimate(cgeo, 2);
+    const cmat = chairParts[0].material.clone();
+    cmat.color.setRGB(0.45, 0.42, 0.38, THREE.SRGBColorSpace);   // 金漆骨架压暗适配项目色板
+    hallChairs = new THREE.InstancedMesh(cgeo, cmat, 29);
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (let k = 0; k < 29; k++) hallChairs.setMatrixAt(k, zero);
+    hallChairs.castShadow = true;
+    hallChairs.receiveShadow = true;
+  }
   for (let i = 0; i < 11; i++) {
     const a = (i / 11) * Math.PI * 2;
     dummy.position.set(2.5 + Math.cos(a) * 2.0, F1, 4.0 + Math.sin(a) * 2.0);
     dummy.rotation.set(0, -a - Math.PI / 2, 0);
     dummy.updateMatrix();
-    chairs.setMatrixAt(ci++, dummy.matrix);
+    if (hallChairs) hallChairs.setMatrixAt(10 + i, dummy.matrix);
+    else chairs.setMatrixAt(ci++, dummy.matrix);
   }
+  if (hallChairs) g.add(hallChairs);
   // 圆桌 11 个餐盘（instanced，随死亡人数递减）
   const plateGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.02, 12);
   const dishes = new THREE.InstancedMesh(plateGeo, MAT.porcelain, 11);
@@ -691,7 +760,7 @@ export function buildVilla(scene, collision, data, opts = {}) {
       mkPoint(0xffd9a0, 20, 16, 2, F2 + 2.3, 0),       // 二层走廊
       mkPoint(0xffd9a0, 20, 16, 0, F3 + 2.3, 0),       // 书房
     ],
-    fire: mkPoint(0xff8f3f, 18, 12, -5.0, F1 + 0.9, -1.2),
+    fire: mkPoint(0xff8f3f, 18, 12, -5.0, F1 + 0.9, -0.7),
     candles: [
       mkPoint(0xd98e4a, 7, 8, -5.0, F1 + 2.4, -1.5),   // 壁炉台烛
       mkPoint(0xd98e4a, 6, 8, 2.5, F1 + 1.3, 4.0),     // 餐桌烛
@@ -712,5 +781,5 @@ export function buildVilla(scene, collision, data, opts = {}) {
   g.add(marble.mesh(MAT.marble, { cast: false }));
   // 窗帘已在上方单独添加（需要独立法线）
 
-  return { group: g, indoor, flames, candleFlames, zones, refs: { chairs, plates: dishes } };
+  return { group: g, indoor, flames, candleFlames, zones, refs: { chairs: hallChairs ?? chairs, plates: dishes } };
 }

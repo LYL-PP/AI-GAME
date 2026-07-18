@@ -5,9 +5,16 @@ import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { buildScanCastle } from './scanCastle.js';
 
 export async function buildCastleShell(scene, collision) {
-  const scan = await buildScanCastle(scene, collision);
-  if (scan) return scan;
-  return buildKenneyShell(scene, collision);
+  const scan = await buildScanCastle(scene, collision);   // 立面移植（门楼）；失败为 null
+  const kenney = await buildKenneyShell(scene, collision, { skipSouthCenter: !!scan });
+  if (!kenney) return scan;                                // Kenney 全灭 → 只留门面（不应发生）
+  if (!scan) return kenney;                                // 纯 Kenney
+  return {                                                 // 门面 + Kenney 侧背：窗火合并
+    windowGlow: {
+      mats: [...kenney.windowGlow.mats, ...scan.windowGlow.mats],
+      lights: [...kenney.windowGlow.lights, ...scan.windowGlow.lights],
+    },
+  };
 }
 
 const BASE = 'assets/models/castle/';
@@ -79,7 +86,8 @@ function mergeGeos(list) {
   return out;
 }
 
-export async function buildKenneyShell(scene, collision) {
+export async function buildKenneyShell(scene, collision, opts = {}) {
+  const skipSC = !!opts.skipSouthCenter;   // 立面移植模式：南面中央 |x|<6.2 让位给扫描门楼
   const loader = new GLTFLoader();
   const models = {};
   try {
@@ -115,6 +123,7 @@ export async function buildKenneyShell(scene, collision) {
     // 南面
     const gridS = y === 1.8 ? xsFront : (off ? xsOff : xs);
     for (const x of gridS) {
+      if (skipSC && Math.abs(x) < 6.2) continue;         // 中央让位给扫描门楼
       let key = 'wall';
       if (y === 1.8 && (x === -5 || x === 5)) key = 'win';      // 法式落地窗位
       else if (y === 5.8 && (x === -7 || x === -5)) key = 'win'; // 维拉窗台
@@ -134,8 +143,8 @@ export async function buildKenneyShell(scene, collision) {
       put(rnd() < 0.12 ? 'win' : 'wall', -XO, y, z, Math.PI / 2);
     }
   }
-  // 正南门 fortified gate（×2，门洞居中）
-  put('gate', 0, 1.8, ZO, 0);
+  // 正南门 fortified gate（×2，门洞居中；立面移植模式下让位）
+  if (!skipSC) put('gate', 0, 1.8, ZO, 0);
 
   // ---------- 四角塔楼（加高至 ~18.4m，外移突出） ----------
   const corners = [
@@ -158,12 +167,24 @@ export async function buildKenneyShell(scene, collision) {
   // ---------- 顶部雉堞一圈（贴外墙面，y=11.8） ----------
   const BY = 11.8, BO = 0.6;
   for (const x of xs) {
-    put('battle', x, BY, ZO + BO + 1, 0);          // 南（条带贴外面）
+    if (!(skipSC && Math.abs(x) < 6.2)) put('battle', x, BY, ZO + BO + 1, 0);  // 南（中央让位）
     put('battle', x, BY, -ZO - BO - 1, Math.PI);   // 北
   }
   for (const z of zs) {
     put('battle', XO + BO + 1, BY, z, -Math.PI / 2);
     put('battle', -XO - BO - 1, BY, z, Math.PI / 2);
+  }
+
+  // 立面移植接缝盖板（扫描门楼与 Kenney 南墙之间，深色石柱面遮缝）
+  if (skipSC) {
+    const seamMat = new THREE.MeshLambertMaterial({ color: 0x8a9096 });
+    for (const [sx0, sx1] of [[5.3, 7.35], [-7.95, -5.9]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx1 - sx0, 10.0, 0.26), seamMat);
+      m.position.set((sx0 + sx1) / 2, 1.8 + 5.0, ZO + 0.02);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      shell.add(m);
+    }
   }
 
   // 正门 gate 门柱碰撞（门洞中央 ≥0.7m 通行）

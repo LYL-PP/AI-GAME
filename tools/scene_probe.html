@@ -51,12 +51,37 @@ if (q.get('ray')) {
   console.log('RAYRESULT', JSON.stringify(hits));
   window.__ray = hits;
 }
-// ?meshes=6,7 只显示指定 mesh（按 traverse 顺序索引）
+// ?meshes=6,7 只显示指定 mesh（按 traverse 顺序索引）；?keepbox=x0,x1,y0,y1,z0,z1 三角心框选保留
 const mfilter = q.get('meshes');
 if (mfilter) {
   const keep = new Set(mfilter.split(',').map(Number));
   let mi = 0;
   model.traverse((o) => { if (o.isMesh && !keep.has(mi++)) o.visible = false; });
+}
+const kb = q.get('keepbox');
+if (kb) {
+  const [x0, x1, y0, y1, z0, z1] = kb.split(',').map(Number);
+  model.updateMatrixWorld(true);
+  const vv = new THREE.Vector3();
+  let kept = 0, total = 0;
+  model.traverse((o) => {
+    if (!o.isMesh || !o.geometry.index) return;
+    const pos = o.geometry.attributes.position;
+    const idx = o.geometry.index.array;
+    const keepIdx = [];
+    for (let i = 0; i < idx.length; i += 3) {
+      total++;
+      let cx = 0, cy = 0, cz = 0;
+      for (let k = 0; k < 3; k++) {
+        vv.fromBufferAttribute(pos, idx[i + k]).applyMatrix4(o.matrixWorld);
+        cx += vv.x / 3; cy += vv.y / 3; cz += vv.z / 3;
+      }
+      if (cx > x0 && cx < x1 && cy > y0 && cy < y1 && cz > z0 && cz < z1) { kept++; keepIdx.push(idx[i], idx[i + 1], idx[i + 2]); }
+    }
+    o.geometry.setIndex(keepIdx);
+  });
+  console.log('KEEPBOX kept', kept, '/', total);
+  window.__kept = [kept, total];
 }
 scene.add(model);
 model.updateMatrixWorld(true);

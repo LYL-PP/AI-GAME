@@ -1,6 +1,7 @@
 // island.js —— 岛屿地形 / 海面 / 礁石 / 码头 / 6 个室外点位
 import * as THREE from '../vendor/three.module.js';
 import { GeoBatch, MAT, lam, signPost, bench, woodpile, axeInStump, loneTree } from './props.js';
+import { getParts, buildProp, decimate, cutGeometryBox } from './sceneProps.js';
 
 const V2 = (x, z) => new THREE.Vector2(x, z);
 
@@ -154,10 +155,16 @@ export function buildIsland(scene, collision, data) {
   sea.position.y = 0;
   group.add(sea);
 
-  // ---------- 岸边礁石（instanced 低面岩石） ----------
-  const rockGeo = new THREE.IcosahedronGeometry(1, 0);
+  // ---------- 岸边礁石（instanced；rock2.glb 减面缩放替换，失败回退低面岩） ----------
+  const rock2Parts = getParts('rock2');
+  let rockGeo = new THREE.IcosahedronGeometry(1, 0);
+  if (rock2Parts) {
+    rockGeo = rock2Parts[0].geometry;
+    decimate(rockGeo, 2);
+    rockGeo.scale(0.005, 0.004, 0.005);   // ~2.5×1.3×1.1m 基础块
+  }
   const rockCount = 190;
-  const rocks = new THREE.InstancedMesh(rockGeo, MAT.rock, rockCount);
+  const rocks = new THREE.InstancedMesh(rockGeo, rock2Parts ? rock2Parts[0].material : MAT.rock, rockCount);
   const dummy = new THREE.Object3D();
   const rc = new THREE.Color();
   let ri = 0;
@@ -202,22 +209,58 @@ export function buildIsland(scene, collision, data) {
   }
   group.add(foam);
 
-  // ---------- 码头（南侧小海湾内木栈道 + 系船柱，距别墅 ~30m） ----------
-  const dock = new GeoBatch();
+  // ---------- 码头（jetty.glb 木栈道；失败回退程序化板。碰撞平台不变） ----------
   const deckY = 1.25;
-  for (let z = 33.5; z <= 58; z += 0.62)
-    dock.box(3.0, 0.1, 0.5, 0, deckY - 0.05, z);                       // 木板
-  dock.box(0.25, 0.22, 24.5, -1.35, deckY - 0.2, 45.8);                // 纵梁
-  dock.box(0.25, 0.22, 24.5, 1.35, deckY - 0.2, 45.8);
-  for (let z = 35; z <= 57; z += 3.2) {                                // 桩（打入湾水）
-    dock.box(0.22, 3.4, 0.22, -1.35, deckY - 1.8, z);
-    dock.box(0.22, 3.4, 0.22, 1.35, deckY - 1.8, z);
+  const jettyParts = getParts('jetty');
+  if (jettyParts) {
+    const j = buildProp(jettyParts, { tint: [0.55, 0.5, 0.45], castShadow: true });
+    j.scale.set(0.45, 0.5, 1.06);   // 3.0 宽 × 25m，板面 ≈1.25
+    j.position.set(0, 0.02, 46.0);
+    group.add(j);
+  } else {
+    const dock = new GeoBatch();
+    for (let z = 33.5; z <= 58; z += 0.62)
+      dock.box(3.0, 0.1, 0.5, 0, deckY - 0.05, z);                       // 木板
+    dock.box(0.25, 0.22, 24.5, -1.35, deckY - 0.2, 45.8);                // 纵梁
+    dock.box(0.25, 0.22, 24.5, 1.35, deckY - 0.2, 45.8);
+    for (let z = 35; z <= 57; z += 3.2) {                                // 桩（打入湾水）
+      dock.box(0.22, 3.4, 0.22, -1.35, deckY - 1.8, z);
+      dock.box(0.22, 3.4, 0.22, 1.35, deckY - 1.8, z);
+    }
+    dock.box(0.3, 0.55, 0.3, -1.2, deckY + 0.22, 57);                    // 系船柱
+    dock.box(0.3, 0.55, 0.3, 1.2, deckY + 0.22, 57);
+    const dockMesh = dock.mesh(MAT.woodDark, { cast: true });
+    group.add(dockMesh);
   }
-  dock.box(0.3, 0.55, 0.3, -1.2, deckY + 0.22, 57);                    // 系船柱
-  dock.box(0.3, 0.55, 0.3, 1.2, deckY + 0.22, 57);
-  const dockMesh = dock.mesh(MAT.woodDark, { cast: true });
-  group.add(dockMesh);
   collision.addPlatform(-1.5, 33.2, 1.5, 58.5, deckY);
+
+  // ---------- 草圃（grass.glb 切小块 Instanced 散布路径两侧，不入碰撞、禁挡路） ----------
+  const grassParts = getParts('grass');
+  if (grassParts) {
+    const ggeo = grassParts[0].geometry;
+    cutGeometryBox(ggeo, { x0: -750, x1: 750, y0: -1e9, y1: 1e9, z0: -750, z1: 750 });   // 中央 ~1.5m 见方
+    decimate(ggeo, 3);
+    const gmat = grassParts[0].material.clone();
+    gmat.color.setRGB(0.5, 0.55, 0.45, THREE.SRGBColorSpace);
+    const G_N = 16;
+    const gmesh = new THREE.InstancedMesh(ggeo, gmat, G_N);
+    const gd = new THREE.Object3D();
+    let gn = 0, gseed = 13;
+    const grand = () => { gseed = (gseed * 16807) % 2147483647; return gseed / 2147483647; };
+    for (let i = 0; i < G_N; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const gx = side * (2.8 + grand() * 2.0);
+      const gz = 14.5 + i * 1.15 + grand() * 0.8;
+      gd.position.set(gx, collision.groundAt(gx, gz, 5) - 0.02, gz);
+      gd.rotation.set(0, grand() * Math.PI * 2, 0);
+      const gs = 1.2 + grand() * 0.9;
+      gd.scale.set(gs, gs, gs);
+      gd.updateMatrix();
+      gmesh.setMatrixAt(gn++, gd.matrix);
+    }
+    gmesh.count = gn;
+    group.add(gmesh);
+  }
   collision.addPlatform(-0.8, 32.0, 0.8, 33.3, 0.9);                   // 登栈道台阶
   collision.addPlatform(-0.8, 30.9, 0.8, 32.1, 0.5);
   const stepB = new GeoBatch();
