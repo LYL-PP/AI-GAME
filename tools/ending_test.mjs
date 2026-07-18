@@ -62,9 +62,21 @@ async function main() {
   // 推进到瓶子
   for (let i = 0; i < 12; i++) { await evaljs('EndingAPI.skip()'); await sleep(900); }
   await shot('end_true_bottle.png');
-  // 推进自白信：每段等文本出现再 skip；同循环监视书房终局图/瓶中信终帧
-  let letterSeen = 0, studySeen = false, bottleSeen = false;
-  for (let i = 0; i < 45; i++) {
+  // 推进自白信：每段等文本出现再 skip；同循环监视夜奔段/书房终局图/瓶中信终帧
+  let letterSeen = 0, nightSeen = false, runSeen = false, studySeen = false, bottleSeen = false;
+  for (let i = 0; i < 60; i++) {
+    const night = await evaljs('JSON.stringify((() => { const e = window.__endings; return e && e.night ? e.night.phase : null; })())');
+    if (night && night !== 'null' && !nightSeen) {
+      nightSeen = true;
+      await sleep(1500);
+      await shot('end_judge_night.png');
+    }
+    if (nightSeen && !runSeen && night === '"run"') {
+      runSeen = true;
+      await sleep(2500);
+      await shot('end_judge_night2.png');
+    }
+    if (night && night !== 'null' && !runSeen) { await sleep(700); continue; }  // 夜奔段不跳过
     if (!studySeen && await evaljs(`document.getElementById('endStudyImg').classList.contains('show')`)) {
       studySeen = true;
       await sleep(2200); // 等渐显完成再截

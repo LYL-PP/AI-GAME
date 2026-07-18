@@ -182,7 +182,7 @@ async function boot() {
     scene, camera, player: null, save, ui, weather,
     dialogueData: data.dialogue, endings: data.endings, confession: data.confession,
     annotations: data.annotations, deaths: data.deaths, uiData: data.ui,
-    clueSpots: data.clueSpots,
+    clueSpots: data.clueSpots, collision,
   });
   chapterManager.onFinale = () => endings.enterFinale();
 
@@ -386,6 +386,7 @@ async function boot() {
   window.__col = collision;
   window.__scene = scene;
   window.__emp = emptiness;
+  window.__endings = endings;
 
   // ---------- 标题画面（开始/继续） ----------
   const titleEl = document.getElementById('titleScreen');
@@ -439,7 +440,7 @@ async function boot() {
   let currentPoi = null;
   let nearNpc = null;
   function updatePoi() {
-    if (prologue.cineActive || dialogue.isOpen() || figurines.active) {
+    if (prologue.cineActive || dialogue.isOpen() || figurines.active || endings.active) {
       if (currentPoi) { currentPoi = null; nearNpc = null; ui.setPoi(null); }
       return;
     }

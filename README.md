@@ -58,3 +58,4 @@ Three.js r160 · 纯程序化几何体 · Web Audio 程序合成 · 无外部模
 ## 调试/演示导航
 
 按 **Q** 或点击左上角章节标题打开章节导航面板：可直达序章/第 1–10 章/终章（默认携带该章已可收集线索），含「前往本章死亡现场」与终章「打开推理板」快捷按钮。
+- 法官骨骼动画模型（行走/奔跑/踉跄/倒毙）：Meshy AI 生成，CC BY 4.0 署名（`assets/models/characters/rigged/wargrave/CREDITS.txt`）。

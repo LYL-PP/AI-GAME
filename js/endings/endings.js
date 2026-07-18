@@ -1,6 +1,7 @@
 // endings.js —— 结局系统：判定 + 四结局演出 + 统计页 + 二周目批注钩子
 import * as THREE from '../vendor/three.module.js';
 import { GeoBatch, MAT } from '../world/props.js';
+import { RiggedActor } from '../characters/rigged.js';
 
 const F1 = 1.8;
 // 隐藏结局玩家罪行闪回文案（据 accusation.json 玩家条目改写）
@@ -48,6 +49,14 @@ export class EndingSystem {
       stats: document.getElementById('stats'),
     };
     this._typing = null;
+    // 法官骨骼动画（踉跄走入黑夜段；dying_backwards 备用清单在册）
+    this._judgeReady = RiggedActor.load('assets/models/characters/rigged/wargrave/', {
+      walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
+      running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
+      injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
+      dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
+    }, { tint: 0x1a1a20 }).then((a) => { this._judge = a; this.scene.add(a.group); return a; })
+      .catch((e) => { console.warn('[judge] 骨骼模型加载失败，跳过夜奔段', e); this._judge = null; });
   }
 
   get active() { return this.state === 'playing'; }
@@ -71,6 +80,8 @@ export class EndingSystem {
     this.el.choices.innerHTML = '';
     this._typing = null;
     this._subQueue = null;
+    this.night = null;
+    if (this._judge) this._judge.group.visible = false;
   }
 
   // ---------- 终章入口 ----------
@@ -212,6 +223,8 @@ export class EndingSystem {
       });
     }
     S.push({ run: () => { this.el.letter.classList.remove('show'); this.hold = 0.5; } });
+    // 4.5 法官踉跄走入黑夜（骨骼动画段；模型未就绪则自动跳过）
+    S.push({ run: () => this._nightStart(), night: true });
     // 5 书房终局图（自杀机关现场）+ 开枪白闪黑屏
     S.push({ run: () => {
       this.el.studyCap.textContent = E.subtitles[0] + '　' + E.subtitles[E.subtitles.length - 1];
@@ -309,6 +322,67 @@ export class EndingSystem {
     return out.slice(0, 3);
   }
 
+  // ---------- 法官踉跄走入黑夜 ----------
+  _nightStart() {
+    if (!this._judge) { this._next(); return; }   // 兜底：模型缺失跳过本段
+    this.night = { t: 0, phase: 'injured' };
+    this._savedPreset = this.weather.getChapter();
+    // 门灯临时加强（背光剪影用），段末随预设恢复
+    for (const L of this.weather.refs.windowGlow?.lights || []) L.userData.base *= 3;
+    this.weather.setChapter(7);                    // 浓雾深夜（仅氛围，不动日程）
+    // 机位：门廊外近距离，正对正门灯笼光晕（法官背光剪影）
+    this._camTo(0, 2.2, 14.5, 0, 1.8, 9.8, 2.6);
+    const a = this._judge;
+    a.group.position.set(0, 1.8, 9.7);
+    a.group.rotation.y = Math.PI;                  // 面向正门（北）
+    a.faceOffset = 0;
+    a.play('injured', { loop: true, timeScale: 1.0 });
+    // 字幕（ui.json judgeNight）
+    const cs = document.getElementById('cineSub');
+    document.getElementById('cineSpeaker').textContent = '';
+    document.getElementById('cineText').textContent = this.uiData.judgeNight?.text || '';
+    cs.classList.add('show');
+    window.AudioAPI?.play?.('step');
+  }
+
+  _nightUpdate(dt) {
+    const n = this.night;
+    const a = this._judge;
+    n.t += dt;
+    const ground = (x, z) => this.collision.groundAt(x, z, a.group.position.y);
+    if (n.phase === 'injured') {
+      // 踉跄退行（背向黑夜，面向门灯），慢速南移
+      a.move(0, 0.85 * dt, ground);
+      if (n.t > 2.6) { n.phase = 'turn'; n.t = 0; }
+    } else if (n.phase === 'turn') {
+      a.face(0, 1, dt, 6);
+      if (n.t > 0.7) {
+        n.phase = 'run'; n.t = 0;
+        a.play('running', { fade: 0.15, timeScale: 1.05 });
+        window.AudioAPI?.play?.('step');
+      }
+    } else if (n.phase === 'run') {
+      // 跑向夜雾深处（渐被雾吞没）
+      a.move(0, 3.9 * dt, ground);
+      if (a.group.position.z > 33 || n.t > 6) {
+        n.phase = 'fadeout'; n.t = 0;
+        const fl = document.getElementById('flashWhite');
+        fl.style.background = '#000';
+        fl.classList.add('show');
+        setTimeout(() => { fl.classList.remove('show'); fl.style.background = ''; }, 900);
+      }
+    } else if (n.phase === 'fadeout') {
+      if (n.t > 1.0) {
+        document.getElementById('cineSub').classList.remove('show');
+        a.group.visible = false;
+        this.weather.setChapter(this._savedPreset ?? 11);
+        this.night = null;
+        this._next();
+      }
+    }
+    a.update(dt);
+  }
+
   _showChoices() {
     this.el.center.classList.add('show');
     this.el.title.textContent = '第十一个人的名字';
@@ -386,6 +460,15 @@ export class EndingSystem {
   // ---------- 推进 ----------
   onE() {
     if (this.state !== 'playing') return false;
+    if (this.night) {
+      const a = this._judge;
+      document.getElementById('cineSub').classList.remove('show');
+      if (a) a.group.visible = false;
+      this.weather.setChapter(this._savedPreset ?? 11);
+      this.night = null;
+      this._next();
+      return true;
+    }
     if (this.cam) { this.cam.t = this.cam.dur; return true; }
     if (this._typing) { this._typing.shown = this._typing.full.length; return true; }
     if (this.hold === 999 && this.el.choices.children.length) return true; // 等待选择中
@@ -408,6 +491,7 @@ export class EndingSystem {
     }
     if (this.state !== 'playing') return;
     this._stepCam(dt);
+    if (this.night) { this._nightUpdate(dt); return; }
     // 道具动画
     if (this.bottle) {
       this.bottle.position.z -= dt * 1.1;
