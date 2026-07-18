@@ -307,11 +307,12 @@ export class NPC {
     this.action = action;
     this.seated = ['sit', 'sit_read', 'knit'].includes(action);
     this.lying = action === 'faint' ? 'side' : action === 'sleep' ? 'back' : null;
-    // 姿态应用
+    // 姿态应用（骨骼角色有真实坐姿 clip：不含在内，clip 自带椅子高度，避免双倍下沉折进椅子）
+    const rigSit = this.rigged && this.seated && this.rigCfg?.sit;
     this.legs.rotation.x = this.seated ? -Math.PI / 2 : 0;
     this.group.rotation.x = this.lying === 'back' ? -Math.PI / 2 : 0;
     this.group.rotation.z = this.lying === 'side' ? Math.PI / 2.2 : 0;
-    this.group.position.y = this.pos.y - (this.seated ? 0.42 : 0) + (this.lying ? 0.12 : 0);
+    this.group.position.y = this.pos.y - (this.seated && !rigSit ? 0.42 : 0) + (this.lying ? 0.12 : 0);
     if (this.spec.tray) this.armR.rotation.x = -1.15;
   }
 

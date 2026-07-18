@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>sit probe2 — 游戏装配全链路复现</title>
+<style>body { margin: 0; background: #23262d; overflow: hidden; }</style>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../js/vendor/three.module.js';
+import { RiggedActor } from '../js/characters/rigged.js';
+
+// 与 npc.js RIGGED_DEFS 完全一致的配置
+const DEFS = {
+  vera: {
+    dir: '../assets/models/characters/rigged/vera/',
+    files: {
+      Walking_Woman: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Walking_Woman_withSkin.glb',
+      Idle_12: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Idle_12_withSkin.glb',
+      Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+      Running: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Running_withSkin.glb',
+    },
+    idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0, sit: 'Chair_Sit_Idle_F',
+  },
+  lombard: {
+    dir: '../assets/models/characters/rigged/lombard/',
+    files: {
+      Walking: 'Meshy_AI_Rugged_Explorer_biped_Animation_Walking_withSkin.glb',
+      Idle_02: 'Meshy_AI_Rugged_Explorer_biped_Animation_Idle_02_withSkin.glb',
+      Chair_Sit_Idle_M: 'Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
+      Running: 'Meshy_AI_Rugged_Explorer_biped_Animation_Running_withSkin.glb',
+    },
+    idle: 'Idle_02', idleTS: 1.0, walk: 'Walking', walkTS: 1.0, sit: 'Chair_Sit_Idle_M',
+  },
+  marston: {
+    dir: '../assets/models/characters/rigged/marston/',
+    files: {
+      Casual_Walk: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Casual_Walk_withSkin.glb',
+      Idle_3: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Idle_3_withSkin.glb',
+      Sitting_Answering_Questions: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Sitting_Answering_Questions_withSkin.glb',
+      Dead: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Dead_withSkin.glb',
+    },
+    idle: 'Idle_3', idleTS: 1.0, walk: 'Casual_Walk', walkTS: 1.0, sit: 'Sitting_Answering_Questions',
+  },
+};
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x353a42);
+const cam = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+scene.add(new THREE.HemisphereLight(0xd8dee8, 0x44503f, 1.4));
+const sun = new THREE.DirectionalLight(0xfff2dd, 1.2);
+sun.position.set(3, 7, 6);
+scene.add(sun);
+// 地面参考
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), new THREE.MeshLambertMaterial({ color: 0x4a4640 }));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const DROP = new URLSearchParams(location.search).has('drop') ? 0.42 : 0;
+const rigs = [];
+const ids = Object.keys(DEFS);
+for (let i = 0; i < ids.length; i++) {
+  const id = ids[i], def = DEFS[id];
+  const rig = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20 });
+  const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
+  tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+  rig.applyPortraitProjection(tex, { marginX: 0.12 });
+  const x = (i - 1) * 1.7;
+  rig.group.position.set(x, -DROP, 0);
+  scene.add(rig.group);
+  // 与游戏同序列：idle → walk →（crossfade）sit
+  rig.play(def.idle, { timeScale: def.idleTS });
+  rig.play(def.walk, { timeScale: def.walkTS });
+  rig.play(def.sit, { timeScale: 0.6 });
+  rigs.push(rig);
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 56;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#e8ddc9'; c.font = '30px monospace'; c.textAlign = 'center';
+  c.fillText(id + (DROP ? ' drop' : ''), 128, 38);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
+  sp.scale.set(1.3, 0.28, 1);
+  sp.position.set(x, 2.0, 0);
+  scene.add(sp);
+}
+// rAF 驱动（与游戏一致）
+const clock = new THREE.Clock();
+function loop() {
+  const dt = Math.min(clock.getDelta(), 0.1);
+  for (const r of rigs) r.update(dt);
+  renderer.render(scene, cam);
+  requestAnimationFrame(loop);
+}
+cam.position.set(0, 1.35, 4.6);
+cam.lookAt(0, 0.55, 0);
+loop();
+window.__ready = true;
+</script>
+</body>
+</html>

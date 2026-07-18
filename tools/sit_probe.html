@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>sit probe</title>
+<style>body { margin: 0; background: #23262d; overflow: hidden; }</style>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../js/vendor/three.module.js';
+import { GLTFLoader } from '../js/vendor/GLTFLoader.js';
+
+// 每行：独立加载一个 GLB（mesh+skin+clip 同文件），播到自己的 clip 中段
+const CASES = [
+  { id: 'vera_sit',   dir: 'vera/',    file: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Chair_Sit_Idle_F_withSkin.glb' },
+  { id: 'vera_walk',  dir: 'vera/',    file: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Walking_Woman_withSkin.glb' },
+  { id: 'lomb_sit',   dir: 'lombard/', file: 'Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb' },
+  { id: 'lomb_walk',  dir: 'lombard/', file: 'Meshy_AI_Rugged_Explorer_biped_Animation_Walking_withSkin.glb' },
+  { id: 'mars_sit',   dir: 'marston/', file: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Sitting_Answering_Questions_withSkin.glb' },
+  { id: 'mars_walk',  dir: 'marston/', file: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Casual_Walk_withSkin.glb' },
+];
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a2e36);
+const cam = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+scene.add(new THREE.HemisphereLight(0xd8dee8, 0x44503f, 1.4));
+const sun = new THREE.DirectionalLight(0xfff2dd, 1.2);
+sun.position.set(3, 7, 6);
+scene.add(sun);
+
+const loader = new GLTFLoader();
+window.__models = {};
+for (let i = 0; i < CASES.length; i++) {
+  const c = CASES[i];
+  const g = await loader.loadAsync(`../assets/models/characters/rigged/${c.dir}${c.file}`);
+  const root = g.scene;
+  const x = (i - (CASES.length - 1) / 2) * 1.6;
+  root.position.set(x, 0, 0);
+  scene.add(root);
+  const mixer = new THREE.AnimationMixer(root);
+  const action = mixer.clipAction(g.animations[0]);
+  action.play();
+  mixer.update(1.2); // 推进到 clip 中段（坐姿已落椅、行走迈步中）
+  // 标注
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 56;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#e8ddc9'; ctx.font = '28px monospace'; ctx.textAlign = 'center';
+  ctx.fillText(c.id, 128, 38);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
+  sp.scale.set(1.2, 0.26, 1);
+  sp.position.set(x, 2.1, 0);
+  scene.add(sp);
+  // 记录包围盒（判断是否骨骼爆炸式拉伸）
+  const bb = new THREE.Box3().setFromObject(root);
+  window.__models[c.id] = {
+    min: { x: bb.min.x - x, y: bb.min.y, z: bb.min.z },
+    max: { x: bb.max.x - x, y: bb.max.y, z: bb.max.z },
+  };
+}
+cam.position.set(0, 1.35, 6.4);
+cam.lookAt(0, 0.85, 0);
+renderer.render(scene, cam);
+window.__ready = true;
+</script>
+</body>
+</html>
