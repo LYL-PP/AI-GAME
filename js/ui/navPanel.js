@@ -1,4 +1,4 @@
-// navPanel.js —— 章节导航面板（F1 / 点击章节标题开合）
+// navPanel.js —— 章节导航面板（Q / 点击章节标题开合）
 export class NavPanel {
   // o: { chapters (chapters.json), getChapter, onJump(n, carryClues), onGotoScene(n), onOpenBoard, ui }
   constructor(o) {

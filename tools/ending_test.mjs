@@ -62,11 +62,19 @@ async function main() {
   // 推进到瓶子
   for (let i = 0; i < 12; i++) { await evaljs('EndingAPI.skip()'); await sleep(900); }
   await shot('end_true_bottle.png');
-  // 推进自白信：每段等文本出现再 skip；同循环监视自杀机关剪影
-  let letterSeen = 0, silSeen = false;
+  // 推进自白信：每段等文本出现再 skip；同循环监视书房终局图/瓶中信终帧
+  let letterSeen = 0, studySeen = false, bottleSeen = false;
   for (let i = 0; i < 45; i++) {
-    const on = await evaljs(`document.getElementById('endSilhouette').classList.contains('show')`);
-    if (on && !silSeen) { silSeen = true; await shot('end_true_silhouette.png'); }
+    if (!studySeen && await evaljs(`document.getElementById('endStudyImg').classList.contains('show')`)) {
+      studySeen = true;
+      await sleep(2200); // 等渐显完成再截
+      await shot('end_study_img.png');
+    }
+    if (!bottleSeen && await evaljs(`document.getElementById('endBottleImg').classList.contains('show')`)) {
+      bottleSeen = true;
+      await sleep(1500);
+      await shot('end_bottle_theend.png');
+    }
     const t = await evaljs(`document.getElementById('endLetterText').textContent.length`);
     if (t > 30) letterSeen++;
     if (i === 6) await shot('end_true_letter.png');
@@ -74,7 +82,8 @@ async function main() {
     await sleep(1100);
   }
   check('① 自白信多段可推进', letterSeen >= 3, `letterSeen=${letterSeen}`);
-  check('① 自杀机关剪影出现', silSeen === true);
+  check('① 书房终局图出现', studySeen === true);
+  check('① 瓶中信 THE END 终帧出现', bottleSeen === true);
   // 隐藏结局选择
   let choiceSeen = false;
   for (let i = 0; i < 20; i++) {

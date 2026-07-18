@@ -39,7 +39,11 @@ export class EndingSystem {
       subtitles: document.getElementById('endSubtitles'),
       choices: document.getElementById('endChoices'),
       nbAnim: document.getElementById('endNotebookAnim'),
-      silhouette: document.getElementById('endSilhouette'),
+      study: document.getElementById('endStudyImg'),
+      studyCap: document.getElementById('endStudyCap'),
+      bottle: document.getElementById('endBottleImg'),
+      bottleTitle: document.getElementById('endBottleTitle'),
+      bottleCap: document.getElementById('endBottleCap'),
       flash: document.getElementById('flashWhite'),
       stats: document.getElementById('stats'),
     };
@@ -60,7 +64,8 @@ export class EndingSystem {
     this.el.overlay.classList.remove('show');
     this.el.center.classList.remove('show');
     this.el.letter.classList.remove('show');
-    this.el.silhouette.classList.remove('show', 'shot');
+    this.el.study.classList.remove('show');
+    this.el.bottle.classList.remove('show');
     this.el.nbAnim.classList.remove('show');
     this.el.stats.classList.remove('show');
     this.el.choices.innerHTML = '';
@@ -207,21 +212,27 @@ export class EndingSystem {
       });
     }
     S.push({ run: () => { this.el.letter.classList.remove('show'); this.hold = 0.5; } });
-    // 5 自杀机关剪影
+    // 5 书房终局图（自杀机关现场）+ 开枪白闪黑屏
     S.push({ run: () => {
-      this.el.silhouette.classList.add('show');
-      this.hold = 3.2;
+      this.el.studyCap.textContent = E.subtitles[0] + '　' + E.subtitles[E.subtitles.length - 1];
+      this.el.study.classList.add('show');
+      this.hold = 3.6;
     } });
     S.push({ run: () => {
-      this.el.silhouette.classList.add('shot');
       this.el.flash.classList.add('show');
       window.AudioAPI?.play?.('gunshot_final');
       setTimeout(() => this.el.flash.classList.remove('show'), 150);
-      this.hold = 1.6;
+      this.hold = 1.8;
     } });
-    S.push({ run: () => { this.el.silhouette.classList.remove('show', 'shot'); this.hold = 0.3; } });
-    // 6 标题字幕
-    S.push({ run: () => this._showCenter(E.title, E.subtitles, null), centerHold: true });
+    S.push({ run: () => { this.el.study.classList.remove('show'); this.hold = 0.4; } });
+    // 6 瓶中信终帧（THE END + 结局标题）
+    S.push({ run: () => {
+      this.el.bottleTitle.textContent = E.title;
+      this.el.bottleCap.textContent = E.subtitles[1] + '　' + E.subtitles[2];
+      this.el.bottle.classList.add('show');
+      this.hold = 5.0;
+    } });
+    S.push({ run: () => { this.el.bottle.classList.remove('show'); this.hold = 0.4; } });
     // 7 隐藏结局追加
     if (this.hiddenOk) {
       S.push({ run: () => this._showCenter('隐藏结局 · 第十一人', PLAYER_SIN, null), centerHold: true });

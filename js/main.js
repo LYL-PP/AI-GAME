@@ -475,7 +475,7 @@ async function boot() {
     ui.setPoi(found);
   }
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'F1') {
+    if (e.code === 'KeyQ') {
       e.preventDefault();
       navPanel.toggle();
       if (!navPanel.isOpen() && !playMode) renderer.domElement.requestPointerLock();

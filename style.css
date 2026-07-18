@@ -461,10 +461,39 @@ html, body {
   100% { transform: perspective(900px) rotateY(-90deg) scale(0.9); opacity: 0; }
 }
 
-#endSilhouette { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
-#endSilhouette.show { display: block; }
-#endSilhouette.shot #muzzle { r: 26; opacity: 1; transition: r 0.08s; }
-#endSilhouette #muzzle { transition: r 0.4s; }
+/* 真结局演出图（全屏渐显） */
+.end-img {
+  position: absolute; inset: 0; display: none; background: #05070a;
+}
+.end-img.show { display: block; animation: endImgFade 1.6s ease-out; }
+@keyframes endImgFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+.end-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.end-img-cap {
+  position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%);
+  width: min(760px, 86vw); text-align: center;
+  font-family: "Noto Serif SC", "SimSun", "STSong", serif;
+  font-size: 15px; letter-spacing: 3px; line-height: 2; color: #e8dcc0;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.95), 0 0 18px rgba(0,0,0,0.8);
+}
+/* THE END 花体（瓶中信终帧） */
+.the-end {
+  position: absolute; top: 16%; left: 11%;
+  font-family: "Edwardian Script ITC", "Palace Script MT", "Brush Script MT", cursive;
+  font-size: clamp(64px, 9vw, 128px);
+  color: #d9b96a;
+  text-shadow: 0 0 24px rgba(217, 142, 74, 0.55), 0 0 64px rgba(217, 142, 74, 0.35), 0 3px 10px rgba(0,0,0,0.9);
+  letter-spacing: 6px;
+  animation: endImgFade 2.2s ease-out;
+}
+.the-end-title {
+  position: absolute; top: calc(16% + clamp(80px, 10.5vw, 150px)); left: 12%;
+  font-family: "Noto Serif SC", "SimSun", "STSong", serif;
+  font-size: 17px; letter-spacing: 6px; color: #e8dcc0;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+  animation: endImgFade 2.6s ease-out;
+}
 
 /* ---------- 通关统计 ---------- */
 #stats {
@@ -503,7 +532,7 @@ html, body {
 }
 .au-bar.on { background: #d98e4a; height: 14px; }
 
-/* ---------- 章节导航面板（F1） ---------- */
+/* ---------- 章节导航面板（Q） ---------- */
 #chapterCard { pointer-events: auto; cursor: pointer; }
 #chapterCard:hover { background: linear-gradient(90deg, rgba(217,142,74,0.18), rgba(16,19,26,0)); }
 #navPanel {

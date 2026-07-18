@@ -26,7 +26,7 @@ export class UI {
 
     // 操作提示（全部来自 ui.json）
     const c = data.ui.controls;
-    const lines = [c.move, c.look, c.interact, c.notebook, c.pause];
+    const lines = [c.move, c.look, c.interact, c.notebook, c.nav, c.pause].filter(Boolean);
     this.el.controlsHint.innerHTML = lines.map((t) => `<div>${t}</div>`).join('');
     this.el.overlayControls.innerHTML = lines.map((t) => `<div>${t}</div>`).join('');
     this.el.overlayTitle.textContent = data.ui.system.gameTitle;

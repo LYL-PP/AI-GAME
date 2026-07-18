@@ -59,32 +59,24 @@
     <div class="end-letter-hint">E — 继续</div>
   </div>
   <div id="endNotebookAnim"><div class="end-nb-cover"></div></div>
-  <svg id="endSilhouette" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
-    <rect width="800" height="450" fill="#05070a"/>
-    <g fill="#d98e4a" opacity="0.85">
-      <!-- 扶手椅 -->
-      <rect x="300" y="250" width="120" height="26"/>
-      <rect x="292" y="200" width="18" height="76"/>
-      <rect x="410" y="200" width="18" height="76"/>
-      <rect x="310" y="276" width="12" height="60"/>
-      <rect x="400" y="276" width="12" height="60"/>
-      <!-- 人形（坐姿，举枪抵颚） -->
-      <circle cx="368" cy="170" r="20"/>
-      <path d="M350 192 q-18 30 -14 60 l64 0 q6 -34 -12 -60 z"/>
-      <rect x="382" y="150" width="34" height="7" transform="rotate(-24 382 150)"/>
-      <!-- 门与皮筋细线 -->
-      <rect x="690" y="120" width="70" height="220" fill="none" stroke="#d98e4a" stroke-width="2"/>
-      <circle cx="700" cy="230" r="4"/>
-      <path d="M410 155 Q 560 120 700 230" fill="none" stroke="#d98e4a" stroke-width="1.2" stroke-dasharray="4 4"/>
-    </g>
-    <circle id="muzzle" cx="414" cy="140" r="0" fill="#fff"/>
-  </svg>
+  <!-- 真结局演出图：书房终局（自杀机关） -->
+  <div id="endStudyImg" class="end-img">
+    <img src="assets/ui/end_study.jpg" alt="">
+    <div class="end-img-cap" id="endStudyCap"></div>
+  </div>
+  <!-- 真结局终帧：瓶中信 + THE END -->
+  <div id="endBottleImg" class="end-img">
+    <img src="assets/ui/end_bottle.jpg" alt="">
+    <div class="the-end">THE END</div>
+    <div class="the-end-title" id="endBottleTitle"></div>
+    <div class="end-img-cap" id="endBottleCap"></div>
+  </div>
 </div>
 
-<!-- 章节导航面板（F1） -->
+<!-- 章节导航面板（Q） -->
 <div id="navPanel">
   <div class="nav-frame">
-    <div class="nav-header">章节导航 <span class="nav-hint">F1 / Esc 关闭</span></div>
+    <div class="nav-header">章节导航 <span class="nav-hint">Q / Esc 关闭</span></div>
     <div id="navList"></div>
     <div class="nav-opts">
       <label><input type="checkbox" id="navCarry" checked> 跳转时携带本章已可收集的线索</label>
