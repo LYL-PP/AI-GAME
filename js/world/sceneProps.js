@@ -7,11 +7,13 @@ import { GLTFLoader } from '../vendor/GLTFLoader.js';
 const _parts = new Map();   // name → [{geometry, material}] | null
 
 // 把 GLB scene 按材质合并成 [{geometry, material}]（节点变换烘进几何）
-function bakeParts(scene) {
+// filter(mesh, bbox): 可选逐 mesh 过滤（如 dining_chair 只留椅、剔除配套脚凳）
+function bakeParts(scene, filter = null) {
   scene.updateMatrixWorld(true);
   const byMat = new Map();
   scene.traverse((o) => {
     if (!o.isMesh) return;
+    if (filter && !filter(o, new THREE.Box3().setFromObject(o))) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     const m = mats[0];
     const geo = o.geometry.clone().applyMatrix4(o.matrixWorld);
@@ -101,10 +103,12 @@ export function cutGeometryBox(geometry, box) {
 
 export async function preloadSceneProps(defs) {
   const loader = new GLTFLoader();
-  await Promise.all(Object.entries(defs).map(async ([name, url]) => {
+  await Promise.all(Object.entries(defs).map(async ([name, def]) => {
+    const url = typeof def === 'string' ? def : def.url;
+    const filter = typeof def === 'object' ? def.filter : null;
     try {
       const g = await loader.loadAsync(url);
-      _parts.set(name, bakeParts(g.scene));
+      _parts.set(name, bakeParts(g.scene, filter));
     } catch (e) {
       console.warn(`[sceneProps] ${name} 加载失败，回退占位：`, e);
       _parts.set(name, null);

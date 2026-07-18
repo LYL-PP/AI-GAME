@@ -101,7 +101,7 @@ async function boot() {
     gramophone: 'assets/models/scene/gramophone.glb',
     figurine: 'assets/models/scene/figurine.glb',
     dining_table: 'assets/models/scene/dining_table.glb',
-    dining_chair: 'assets/models/scene/dining_chair.glb',
+    dining_chair: { url: 'assets/models/scene/dining_chair.glb', filter: (o, bb) => bb.max.y > 1.0 },   // 只留椅、剔除配套脚凳
     candelabra: 'assets/models/scene/candelabra.glb',
     chandelier: 'assets/models/scene/chandelier.glb',
     rug: 'assets/models/scene/rug.glb',
