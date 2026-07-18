@@ -2,6 +2,7 @@
 import * as THREE from '../vendor/three.module.js';
 import { lam, textTexture } from '../world/props.js';
 import { KenneyLib } from './kenney.js';
+import { RiggedActor } from './rigged.js';
 
 const MAT_V = new THREE.MeshLambertMaterial({ vertexColors: true });
 
@@ -167,6 +168,31 @@ export class NPC {
     this.spec = { ...SPECS[def.id], name: def.name };
     // Kenney 方块人物（characters.json modelHint.kenney 数据驱动）；失败退回程序化模型
     const kid = def.modelHint?.kenney;
+    if (def.id === 'wargrave' && kenneyLib?.riggedWargrave) {
+      const rig = kenneyLib.riggedWargrave;
+      this.kenney = true;
+      this.rigged = rig;
+      rig.group.visible = true;
+      this.group = rig.group;
+      this.inner = rig.group;
+      this.legs = new THREE.Group();
+      this.body = new THREE.Group();
+      this.head = new THREE.Group();
+      this.armL = new THREE.Group();
+      this.armR = new THREE.Group();
+      rig.play('walking', { timeScale: 0.12 });
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: textTexture([def.name], { w: 256, h: 80, bg: 'rgba(20,18,16,0.55)', fg: '#e8ddc9', border: 'rgba(217,142,74,0.0)', fontMain: 46 }),
+        transparent: true, depthWrite: false,
+      }));
+      label.scale.set(0.5, 0.16, 1);
+      label.position.y = this.spec.h + 0.24;
+      this.group.add(label);
+      this.label = label;
+      scene.add(this.group);
+      this._initState();
+      return;
+    }
     if (kid && kenneyLib?.has(kid)) {
       const hint = def.modelHint;
       const built = kenneyLib.build(kid, {
@@ -249,6 +275,18 @@ export class NPC {
     if (this.removed || this.dead) return;
 
     // 行走由 schedule 驱动位移；这里只播动画
+    if (this.rigged) {
+      this.rigged.update(dt);
+      if (this.walking) {
+        if (this.rigged.currentName !== 'walking') this.rigged.play('walking', { timeScale: 1.0 });
+        else this.rigged.current.action.timeScale = 1.0;
+      } else if (this.rigged.currentName !== 'walking') {
+        this.rigged.play('walking', { timeScale: 0.12 });
+      } else if (!this.seated) {
+        this.rigged.current.action.timeScale = 0.12;
+      }
+      return;
+    }
     if (this.walking) {
       const bobTarget = this.kenney ? this.inner : this.body;
       bobTarget.position.y = Math.abs(Math.sin(tt * 7)) * 0.035;
@@ -384,6 +422,11 @@ export class NPC {
     this.deadPose = type;
     this.walking = false;
     this.reaction = null;
+    if (this.rigged && this.rigged.has('dying')) {
+      // dying_backwards 末帧定格（组变换不再叠加）
+      this.rigged.play('dying', { loop: false, fade: 0.2, timeScale: 1.0 });
+      return;
+    }
     const g = this.group;
     switch (type) {
       case 'slump':   // 坐姿垮下（头垂、手垂）
@@ -423,6 +466,24 @@ export class NPCManager {
   static async create(scene, characters) {
     const kids = characters.map((c) => c.modelHint?.kenney).filter(Boolean);
     const lib = await KenneyLib.load(kids);
+    // 沃格雷夫日常骨骼模型（立绘平面投影贴图；夜奔段另有黑化剪影实例，互不影响）
+    try {
+      const rig = await RiggedActor.load('assets/models/characters/rigged/wargrave/', {
+        walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
+        running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
+        injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
+        dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
+      }, { tint: 0x1a1a20 });
+      const tex = new THREE.TextureLoader().load('assets/models/characters/rigged/wargrave/tex_fullbody.jpg');
+      tex.flipY = false;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      rig.applyPortraitProjection(tex, { marginX: 0.12 });
+      rig.group.visible = false;
+      scene.add(rig.group);
+      lib.riggedWargrave = rig;
+    } catch (e) {
+      console.warn('[rigged wargrave] 日常骨骼加载失败，退回 kenney 模型', e);
+    }
     return new NPCManager(scene, characters, lib);
   }
   constructor(scene, characters, kenneyLib = null) {

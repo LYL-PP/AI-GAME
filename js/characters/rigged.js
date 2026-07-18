@@ -36,6 +36,56 @@ export class RiggedActor {
 
   has(name) { return !!this.items[name]; }
 
+  // 正面平面投影贴图（绑定空间 XY 投影；正面油画质感，背面暗色罩染）
+  // map: THREE.Texture；marginX: 横向内缩比例（立绘人物居中）
+  applyPortraitProjection(map, { marginX = 0.1, backColor = 0x141418 } = {}) {
+    // 全体模型绑定空间包围盒
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    for (const o of Object.values(this.items)) {
+      o.root.traverse((m) => {
+        if (!m.isMesh) return;
+        m.geometry.computeBoundingBox();
+        const bb = m.geometry.boundingBox;
+        minX = Math.min(minX, bb.min.x); maxX = Math.max(maxX, bb.max.x);
+        minY = Math.min(minY, bb.min.y); maxY = Math.max(maxY, bb.max.y);
+      });
+    }
+    const sizeX = (maxX - minX) * (1 + marginX * 2);
+    const cx = (minX + maxX) / 2;
+    const u0 = cx - sizeX / 2;
+    for (const o of Object.values(this.items)) {
+      const mat = new THREE.MeshLambertMaterial({
+        color: 0xffffff, transparent: true, opacity: 0,
+      });
+      mat.onBeforeCompile = (sh) => {
+        sh.uniforms.uProjMap = { value: map };
+        sh.uniforms.uProjOrigin = { value: new THREE.Vector2(u0, minY) };
+        sh.uniforms.uProjSize = { value: new THREE.Vector2(sizeX, maxY - minY) };
+        sh.uniforms.uBackColor = { value: new THREE.Color(backColor) };
+        sh.vertexShader = sh.vertexShader
+          .replace('#include <common>', '#include <common>\nvarying vec2 vProjUv;')
+          .replace('#include <begin_vertex>', `#include <begin_vertex>
+            vProjUv = vec2((position.x - uProjOrigin.x) / uProjSize.x,
+                           1.0 - (position.y - uProjOrigin.y) / uProjSize.y);`);
+        sh.vertexShader = 'uniform vec2 uProjOrigin;\nuniform vec2 uProjSize;\n' + sh.vertexShader;
+        sh.fragmentShader = sh.fragmentShader
+          .replace('#include <common>', '#include <common>\nvarying vec2 vProjUv;\nuniform sampler2D uProjMap;\nuniform vec3 uBackColor;')
+          .replace('#include <map_fragment>', `
+            #ifdef GL_FRONT_FACING
+            if (gl_FrontFacing) {
+              diffuseColor *= texture2D(uProjMap, vProjUv);
+            } else {
+              diffuseColor.rgb = uBackColor;
+            }
+            #else
+            diffuseColor *= texture2D(uProjMap, vProjUv);
+            #endif`);
+      };
+      o.mat = mat;
+      o.root.traverse((m) => { if (m.isMesh) m.material = mat; });
+    }
+  }
+
   // 播放/切换：crossfade（动作权重 + 材质透明度同步）
   play(name, { loop = true, fade = 0.25, timeScale = 1 } = {}) {
     const it = this.items[name];

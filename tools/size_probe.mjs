@@ -26,12 +26,12 @@ async function main() {
   const r = await evaljs(`(async () => {
     const THREE = await import('./js/vendor/three.module.js');
     const out = [];
-    for (const id of ['wargrave','marston','vera','brent']) {
+    for (const id of ['wargrave']) {
       const n = NPCAPI.get(id);
       const bb = new THREE.Box3().setFromObject(n.group);
       let hex = '';
       n.group.traverse(o => { if (o.isMesh && !hex && o.material.color) hex = o.material.color.getHexString(); });
-      out.push({ id, kenney: !!n.kenney, h: +(bb.max.y-bb.min.y).toFixed(2), hex });
+      out.push({ id, kenney: !!n.kenney, rigged: !!n.rigged, clip: n.rigged ? n.rigged.currentName : null, ts: n.rigged && n.rigged.current ? +n.rigged.current.action.timeScale.toFixed(2) : null, h: +(bb.max.y-bb.min.y).toFixed(2), hex });
     }
     return JSON.stringify(out);
   })()`);
