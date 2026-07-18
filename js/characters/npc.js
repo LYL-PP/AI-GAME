@@ -1,6 +1,7 @@
 // npc.js —— 10 名 NPC：程序化低模人形（顶点色单材质）+ 程序动画（无骨骼）
 import * as THREE from '../vendor/three.module.js';
 import { lam, textTexture } from '../world/props.js';
+import { KenneyLib } from './kenney.js';
 
 const MAT_V = new THREE.MeshLambertMaterial({ vertexColors: true });
 
@@ -160,23 +161,62 @@ function buildFigure(spec) {
 }
 
 export class NPC {
-  constructor(def, scene) {
+  constructor(def, scene, kenneyLib = null) {
     this.id = def.id;
     this.def = def;
     this.spec = { ...SPECS[def.id], name: def.name };
+    // Kenney 方块人物（characters.json modelHint.kenney 数据驱动）；失败退回程序化模型
+    const kid = def.modelHint?.kenney;
+    if (kid && kenneyLib?.has(kid)) {
+      const hint = def.modelHint;
+      const built = kenneyLib.build(kid, {
+        tex: hint.tex ?? null,
+        tint: hint.tint ?? null,
+        height: this.spec.h,
+        accessories: hint.accessories || [],
+      });
+      this.kenney = true;
+      this.group = built.group;
+      this.inner = built.inner;
+      const legs = new THREE.Group();
+      if (built.parts.legL) legs.add(built.parts.legL);
+      if (built.parts.legR) legs.add(built.parts.legR);
+      this.legs = legs;
+      this.body = built.parts.body || new THREE.Group();
+      this.head = built.parts.head || new THREE.Group();
+      this.armL = built.parts.armL || new THREE.Group();
+      this.armR = built.parts.armR || new THREE.Group();
+      // 名牌
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: textTexture([def.name], { w: 256, h: 80, bg: 'rgba(20,18,16,0.55)', fg: '#e8ddc9', border: 'rgba(217,142,74,0.0)', fontMain: 46 }),
+        transparent: true, depthWrite: false,
+      }));
+      label.scale.set(0.5, 0.16, 1);
+      label.position.y = this.spec.h + 0.24;
+      this.group.add(label);
+      this.label = label;
+      scene.add(this.group);
+      this._initState();
+      return;
+    }
+    this.kenney = false;
     const parts = buildFigure(this.spec);
     Object.assign(this, parts);
     scene.add(this.group);
+    this._initState();
+  }
+
+  _initState() {
     this.pos = new THREE.Vector3();
     this.yaw = 0;
     this.action = 'idle';
     this.seated = false;
     this.lying = null;
-    this.reaction = null;   // {type, t, dur}
-    this.walking = null;    // schedule 行走时挂接
+    this.reaction = null;
+    this.walking = null;
     this.removed = false;
-    this.dead = false;      // 死亡标记（对话/碰撞/名牌排除）
-    this.permaHidden = false; // 死亡移除（不可被距离剔除恢复）
+    this.dead = false;
+    this.permaHidden = false;
     this._t = Math.random() * 10;
   }
 
@@ -210,12 +250,14 @@ export class NPC {
 
     // 行走由 schedule 驱动位移；这里只播动画
     if (this.walking) {
-      this.body.position.y = Math.abs(Math.sin(tt * 7)) * 0.035;
+      const bobTarget = this.kenney ? this.inner : this.body;
+      bobTarget.position.y = Math.abs(Math.sin(tt * 7)) * 0.035;
       this.armL.rotation.x = Math.sin(tt * 7) * 0.5;
       this.armR.rotation.x = this.spec.tray ? -1.15 : -Math.sin(tt * 7) * 0.5;
+      this.legs.rotation.x = this.kenney ? Math.sin(tt * 7) * 0.4 : this.legs.rotation.x;
       return;
     }
-    this.body.position.y = 0;
+    (this.kenney ? this.inner : this.body).position.y = 0;
 
     const R = this.reaction;
     if (R) {
@@ -378,12 +420,18 @@ export class NPC {
 }
 
 export class NPCManager {
-  constructor(scene, characters) {
+  static async create(scene, characters) {
+    const kids = characters.map((c) => c.modelHint?.kenney).filter(Boolean);
+    const lib = await KenneyLib.load(kids);
+    return new NPCManager(scene, characters, lib);
+  }
+  constructor(scene, characters, kenneyLib = null) {
     this.scene = scene;
+    this.kenneyLib = kenneyLib;
     this.npcs = new Map();
     for (const def of characters) {
       if (def.id === 'player') continue;
-      this.npcs.set(def.id, new NPC(def, scene));
+      this.npcs.set(def.id, new NPC(def, scene, kenneyLib));
     }
   }
   get(id) { return this.npcs.get(id); }

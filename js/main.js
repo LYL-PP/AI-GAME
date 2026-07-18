@@ -121,7 +121,7 @@ async function boot() {
   // ---------- 存档 / NPC / 日程 / 对话 / 序章 ----------
   if (params.get('fresh') === '1') localStorage.removeItem('attwn_save');
   const save = new Save();
-  const npcManager = new NPCManager(scene, data.characters);
+  const npcManager = await NPCManager.create(scene, data.characters);
   const schedule = new ScheduleManager(scene, collision, npcManager, data.schedules, data.places);
   const portraits = {};
   for (const c of data.characters) portraits[c.id] = c.portrait?.file;

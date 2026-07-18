@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>skin gallery</title>
+<style>body { margin: 0; background: #23262d; overflow: hidden; }</style>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../js/vendor/three.module.js';
+import { GLTFLoader } from '../js/vendor/GLTFLoader.js';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x23262d);
+const cam = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+scene.add(new THREE.HemisphereLight(0xd8dee8, 0x44503f, 1.3));
+const sun = new THREE.DirectionalLight(0xfff2dd, 1.2);
+sun.position.set(3, 7, 6);
+scene.add(sun);
+
+const CHARS = ['wargrave','vera','lombard','armstrong','blore','macarthur','brent','rogers','mrs_rogers','marston'];
+const NAMES = {wargrave:'沃格雷夫',vera:'维拉',lombard:'隆巴德',armstrong:'阿姆斯特朗',blore:'布洛尔',macarthur:'麦克阿瑟',brent:'布伦特',rogers:'罗杰斯',mrs_rogers:'罗杰斯太太',marston:'马尔斯顿'};
+
+function nameSprite(text, w = 1.0) {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 56;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#e8ddc9'; c.font = '34px "SimSun",serif'; c.textAlign = 'center';
+  c.fillText(text, 128, 40);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
+  sp.scale.set(w, w * 0.22, 1);
+  return sp;
+}
+
+const loader = new GLTFLoader();
+const texLoader = new THREE.TextureLoader();
+const chars = await (await fetch('../data/characters.json').then(r => r.json())).characters;
+
+for (let i = 0; i < CHARS.length; i++) {
+  const id = CHARS[i];
+  const hint = chars.find(c => c.id === id)?.modelHint;
+  const x = (i - (CHARS.length - 1) / 2) * 1.9;
+  // 模型
+  const g = await loader.loadAsync(`../assets/models/characters/${hint.kenney}.glb`);
+  const model = g.scene;
+  const tex = texLoader.load('../' + hint.tex);
+  tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+  model.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.map = tex; o.material.color.setHex(0xffffff); } });
+  const bb = new THREE.Box3().setFromObject(model);
+  const s = 1.7 / (bb.max.y - bb.min.y);
+  model.scale.setScalar(s);
+  model.position.set(x - 0.45, -bb.min.y * s, 0);
+  scene.add(model);
+  // 立绘
+  const ptex = texLoader.load(`../assets/portraits/${id}.jpg`);
+  ptex.colorSpace = THREE.SRGBColorSpace;
+  const pp = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.39), new THREE.MeshBasicMaterial({ map: ptex }));
+  pp.position.set(x + 0.5, 0.72, 0);
+  scene.add(pp);
+  // 名字
+  const ns = nameSprite(NAMES[id]);
+  ns.position.set(x, 2.05, 0);
+  scene.add(ns);
+}
+cam.position.set(0, 1.3, 13.8);
+cam.lookAt(0, 0.95, 0);
+renderer.render(scene, cam);
+window.__ready = true;
+</script>
+</body>
+</html>

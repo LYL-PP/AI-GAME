@@ -22,8 +22,12 @@
         "留声机播放时异常从容"
       ],
       "modelHint": {
-        "kenney": "character-j",
-        "note": "瘦高、面色阴沉；待人工确认"
+        "kenney": "character-i",
+        "tex": "assets/models/characters/tex/wargrave.png",
+        "accessories": [
+          "glasses"
+        ],
+        "note": "秃顶眼镜法官：Kenney-i + re-skin 黑法官袍"
       },
       "portrait": {
         "file": "assets/portraits/wargrave.jpg",
@@ -52,8 +56,10 @@
         "第9章后行为明显崩溃"
       ],
       "modelHint": {
-        "kenney": "character-f",
-        "note": "年轻女性、素色衣裙；待人工确认"
+        "kenney": "character-e",
+        "tex": "assets/models/characters/tex/vera.png",
+        "accessories": [],
+        "note": "棕发女性：Kenney-e + re-skin 灰绿裙"
       },
       "portrait": {
         "file": "assets/portraits/vera.jpg",
@@ -82,8 +88,12 @@
         "始终怀疑沃格雷夫"
       ],
       "modelHint": {
-        "kenney": "character-b",
-        "note": "高大男性、深色外套；待人工确认"
+        "kenney": "character-m",
+        "tex": "assets/models/characters/tex/lombard.png",
+        "accessories": [
+          "holster"
+        ],
+        "note": "胡子雇佣兵：Kenney-m + re-skin 深棕+枪套"
       },
       "portrait": {
         "file": "assets/portraits/lombard.jpg",
@@ -112,8 +122,12 @@
         "第7章深夜应沃格雷夫之约外出，一去不回"
       ],
       "modelHint": {
-        "kenney": "character-e",
-        "note": "戴眼镜、西装；待人工确认"
+        "kenney": "character-b",
+        "tex": "assets/models/characters/tex/armstrong.png",
+        "accessories": [
+          "glasses"
+        ],
+        "note": "胡子医生：Kenney-b + re-skin 灰西装+眼镜"
       },
       "portrait": {
         "file": "assets/portraits/armstrong.jpg",
@@ -142,8 +156,10 @@
         "第7章深夜听到过神秘脚步声"
       ],
       "modelHint": {
-        "kenney": "character-d",
-        "note": "粗壮男性；待人工确认"
+        "kenney": "character-k",
+        "tex": "assets/models/characters/tex/blore.png",
+        "accessories": [],
+        "note": "粗壮前警探：Kenney-k + re-skin 棕灰"
       },
       "portrait": {
         "file": "assets/portraits/blore.jpg",
@@ -172,8 +188,10 @@
         "对死亡预言式的平静"
       ],
       "modelHint": {
-        "kenney": "character-h",
-        "note": "年长男性、军装色；待人工确认"
+        "kenney": "character-j",
+        "tex": "assets/models/characters/tex/macarthur.png",
+        "accessories": [],
+        "note": "白发军装：Kenney-j + re-skin 橄榄军装"
       },
       "portrait": {
         "file": "assets/portraits/macarthur.jpg",
@@ -201,8 +219,12 @@
         "写日记（日后成警方证据）"
       ],
       "modelHint": {
-        "kenney": "character-i",
-        "note": "年长女性、深色长裙；待人工确认"
+        "kenney": "character-e",
+        "tex": "assets/models/characters/tex/brent.png",
+        "accessories": [
+          "yarn"
+        ],
+        "note": "深色老妇：Kenney-e + re-skin 紫灰+毛线团"
       },
       "portrait": {
         "file": "assets/portraits/brent.jpg",
@@ -231,8 +253,12 @@
         "口袋里的餐厅钥匙被凶手取走"
       ],
       "modelHint": {
-        "kenney": "character-g",
-        "note": "侍者装束；待人工确认"
+        "kenney": "character-q",
+        "tex": "assets/models/characters/tex/rogers.png",
+        "accessories": [
+          "tray"
+        ],
+        "note": "黑西装管家：Kenney-q + re-skin 黑+托盘"
       },
       "portrait": {
         "file": "assets/portraits/rogers.jpg",
@@ -260,8 +286,10 @@
         "出场即“连自己的影子都能吓到她”"
       ],
       "modelHint": {
-        "kenney": "character-k",
-        "note": "瘦弱女性、深色衣；待人工确认"
+        "kenney": "character-e",
+        "tex": "assets/models/characters/tex/mrs_rogers.png",
+        "accessories": [],
+        "note": "苍白瘦小：Kenney-e + re-skin 黑衣"
       },
       "portrait": {
         "file": "assets/portraits/mrs_rogers.jpg",
@@ -288,8 +316,10 @@
         "“为犯法干一杯”——他的轻浮本身就是注脚"
       ],
       "modelHint": {
-        "kenney": "character-c",
-        "note": "鲜亮衣着年轻男性；待人工确认"
+        "kenney": "character-q",
+        "tex": "assets/models/characters/tex/marston.png",
+        "accessories": [],
+        "note": "浮夸浅色：Kenney-q + re-skin 奶油西装"
       },
       "portrait": {
         "file": "assets/portraits/marston.jpg",
