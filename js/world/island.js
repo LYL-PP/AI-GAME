@@ -241,24 +241,40 @@ export function buildIsland(scene, collision, data) {
     cutGeometryBox(ggeo, { x0: -750, x1: 750, y0: -1e9, y1: 1e9, z0: -750, z1: 750 });   // 中央 ~1.5m 见方
     decimate(ggeo, 5);
     const gmat = grassParts[0].material.clone();
-    gmat.color.setRGB(0.62, 0.68, 0.52, THREE.SRGBColorSpace);   // 阴天提亮（青草层次）
-    if (gmat.emissive) { gmat.emissive.setHex(0x101a08); gmat.emissiveIntensity = 0.45; }
-    const G_N = 8;
+    gmat.color.setRGB(0.68, 0.74, 0.58, THREE.SRGBColorSpace);   // 阴天提亮（青草层次）
+    if (gmat.emissive) { gmat.emissive.setHex(0x16200a); gmat.emissiveIntensity = 0.55; }
+    const G_N = 40;   // 加密：路径两侧 18 + 别墅周边 10 + 小径沿线 8 + 新树下 4
     const gmesh = new THREE.InstancedMesh(ggeo, gmat, G_N);
     const gd = new THREE.Object3D();
     let gn = 0, gseed = 13;
     const grand = () => { gseed = (gseed * 16807) % 2147483647; return gseed / 2147483647; };
-    for (let i = 0; i < G_N; i++) {
-      const side = i % 2 === 0 ? -1 : 1;
-      const gx = side * (2.8 + grand() * 2.0);
-      const gz = 14.5 + i * 1.15 + grand() * 0.8;
+    const putG = (gx, gz, s0 = 1.2, s1 = 0.9) => {
+      if (gn >= G_N) return;
       gd.position.set(gx, collision.groundAt(gx, gz, 5) - 0.02, gz);
       gd.rotation.set(0, grand() * Math.PI * 2, 0);
-      const gs = 1.2 + grand() * 0.9;
+      const gs = s0 + grand() * s1;
       gd.scale.set(gs, gs, gs);
       gd.updateMatrix();
       gmesh.setMatrixAt(gn++, gd.matrix);
+    };
+    for (let i = 0; i < 18; i++) {   // 码头→别墅路径两侧（原 8 丛加密到 18）
+      const side = i % 2 === 0 ? -1 : 1;
+      putG(side * (2.8 + grand() * 2.0), 14.5 + i * 1.1 + grand() * 0.8);
     }
+    for (let i = 0; i < 10; i++) {   // 别墅周边
+      const ang = (i / 10) * Math.PI * 2;
+      putG(Math.cos(ang) * (17.5 + grand() * 2), -1 + Math.sin(ang) * (12 + grand() * 4));
+    }
+    for (let i = 0; i < 8; i++) {    // 小径沿线（横向偏移，避路面）
+      const t = (i + 0.5) / 8;
+      const pi = Math.min(PATH.length - 2, Math.floor(t * (PATH.length - 1)));
+      const a = PATH[pi], b = PATH[pi + 1];
+      const k = t * (PATH.length - 1) - pi;
+      const px = a.x + (b.x - a.x) * k, pz = a.y + (b.y - a.y) * k;
+      const side = i % 2 === 0 ? -1 : 1;
+      putG(px + side * (2.5 + grand() * 1.5), pz + side * (grand() * 1.5));
+    }
+    for (const [bx, bz] of [[36, -16], [-18, -26.5], [28, 15], [34.5, -14.5]]) putG(bx + grand() * 2 - 1, bz + grand() * 2 - 1, 1.0, 0.7);   // 新树下
     gmesh.count = gn;
     group.add(gmesh);
   }
@@ -311,6 +327,83 @@ export function buildIsland(scene, collision, data) {
   tree.position.set(trX, groundHeight(trX, trZ), trZ);
   group.add(tree);
   collision.addBox(trX - 0.35, groundHeight(trX, trZ), trZ - 0.35, trX + 0.35, groundHeight(trX, trZ) + 3, trZ + 0.35);
+
+  // ---------- 点缀树 ×3（tree.glb 墨绿压暗；中轴视线走廊 x±5 与孤树 9m 内留空） ----------
+  const treeParts = getParts('tree');
+  if (treeParts) {
+    for (const [tx2, tz2, ts, td] of [[36, -16, 2.4, 1], [-18, -26.5, 2.1, 3], [28, 15, 2.6, 1]]) {
+      const t = buildProp(treeParts, { decimateN: td, tint: [0.42, 0.5, 0.44], castShadow: true });   // 近景树不减面；小径远树减面（预算 41.5k×2+13.8k）
+      t.scale.setScalar(ts);
+      const ty = groundHeight(tx2, tz2);
+      t.position.set(tx2, ty, tz2);
+      t.rotation.y = tx2 * 1.7 + tz2 * 0.3;
+      group.add(t);
+      collision.addBox(tx2 - 0.4, ty, tz2 - 0.4, tx2 + 0.4, ty + 3.2, tz2 + 0.4);   // 近路径树干碰撞（圆柱近似）
+    }
+  }
+
+  // ---------- 内陆散布岩 ×10（rock1/rock3 减面，远路径不入碰撞） ----------
+  {
+    let rs = 7;
+    const rnd = () => { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
+    const spots = [];
+    let guard = 0;
+    while (spots.length < 16 && guard++ < 700) {
+      const x = (rnd() * 2 - 1) * 55, z = rnd() * 65 - 35;
+      if (Math.abs(x) < 6.5) continue;                                   // 中轴走廊留空
+      if (x > -18 && x < 18 && z > -14 && z < 20) continue;              // 别墅地基区
+      if (pathInfo(x, z).d < 3.2) continue;                              // 不压小径
+      if (Math.hypot(x - 44, z - 50) < 7) continue;                      // 海滩现场
+      if (Math.hypot(x - trX, z - trZ) < 9) continue;                    // 孤树保护区
+      spots.push([x, z]);
+    }
+    const rockSets = [[getParts('rock1'), 4, 0.22, 0.2], [getParts('rock3'), 6, 0.7, 0.7]];   // 原料 8.3m/2.2m 米级
+    let ri2 = 0;
+    for (const [parts, dec, s0, s1] of rockSets) {
+      if (!parts) continue;
+      const geo = parts[0].geometry.clone();
+      decimate(geo, dec);
+      const mat = parts[0].material.clone();
+      if (mat.color) mat.color.setRGB(0.58, 0.6, 0.64, THREE.SRGBColorSpace);
+      const im = new THREE.InstancedMesh(geo, mat, 8);
+      im.castShadow = true; im.receiveShadow = true;
+      const dd = new THREE.Object3D();
+      for (let k = 0; k < 8 && ri2 < spots.length; k++, ri2++) {
+        const [x, z] = spots[ri2];
+        dd.position.set(x, groundHeight(x, z) - 0.05, z);
+        dd.rotation.set(0, rnd() * Math.PI * 2, 0);
+        const sc = s0 + rnd() * s1;
+        dd.scale.set(sc, sc * (0.8 + rnd() * 0.4), sc);
+        dd.updateMatrix();
+        im.setMatrixAt(k, dd.matrix);
+      }
+      im.count = 8;
+      group.add(im);
+    }
+  }
+
+  // ---------- 高空云 ×2（weather 联动调色/隐藏/高度；update 缓慢漂移） ----------
+  const clouds = [];
+  const cloudParts = getParts('cloud');
+  if (cloudParts) {
+    for (const [cx, cy, cz, cs, spd] of [[-12, 62, -30, 8.0, 1.1], [16, 66, 55, 7.0, 0.8]]) {
+      const cp = buildProp(cloudParts, { decimateN: 6, tint: [0.85, 0.87, 0.9], castShadow: false, receiveShadow: false });   // 高空剪影级减面
+      const mats = [];
+      cp.traverse((m) => {
+        if (m.isMesh) {
+          m.material.transparent = true;
+          m.material.opacity = 0.5;
+          m.material.depthWrite = false;
+          mats.push(m.material);
+        }
+      });
+      cp.scale.setScalar(cs);
+      cp.position.set(cx, cy, cz);
+      cp.renderOrder = -1;
+      group.add(cp);
+      clouds.push({ obj: cp, mats, speed: spd });
+    }
+  }
 
   // ---------- 小径石板（instanced 踏步石） ----------
   const stoneGeo = new THREE.BoxGeometry(0.9, 0.07, 0.65);
@@ -383,7 +476,7 @@ export function buildIsland(scene, collision, data) {
   }
 
   return {
-    group, pois, groundHeight, seaUniforms, seaMat,
+    group, pois, groundHeight, seaUniforms, seaMat, clouds,
     spawn: { x: 0, z: 48, yaw: 0 },   // 新码头出生（湾中栈道），面朝别墅（-Z）
   };
 }

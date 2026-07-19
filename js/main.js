@@ -110,6 +110,9 @@ async function boot() {
     jetty: 'assets/models/scene/jetty.glb',
     rock1: 'assets/models/scene/rock1.glb',
     rock2: 'assets/models/scene/rock2.glb',
+    rock3: 'assets/models/scene/rock3.glb',
+    tree: 'assets/models/scene/tree.glb',
+    cloud: 'assets/models/scene/cloud.glb',
     grass: 'assets/models/scene/grass.glb',
   });
   const island = buildIsland(scene, collision, data);
@@ -137,6 +140,7 @@ async function boot() {
     flames: villa.flames,
     candleFlames: villa.candleFlames,
     windowGlow: castleRefs?.windowGlow,
+    clouds: island.clouds,
   });
 
   // ---------- 存档 / NPC / 日程 / 对话 / 序章 ----------

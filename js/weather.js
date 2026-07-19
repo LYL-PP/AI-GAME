@@ -69,6 +69,22 @@ export const PRESETS = [
 
 const RAIN_MAX = 4000;
 
+// 高空云天气联动（refs.clouds）：[色, 不透明度, 高度]；不透明度 0 = 雾天隐藏
+const CLOUD_PRESETS = [
+  [0xb4bac2, 0.5, 62],   // 0 阴·白天
+  [0x4a525c, 0.6, 58],   // 1 雨夜
+  [0x565e66, 0.7, 56],   // 2 暴雨·晨
+  [0x2e343a, 0.85, 54],  // 3 风暴夜（闪电，暗灰压顶）
+  [0x363c43, 0.85, 54],  // 4 风暴晨
+  [0, 0, 62],            // 5 雾·午后（隐）
+  [0x1c232c, 0.7, 56],   // 6 暗夜
+  [0, 0, 56],            // 7 极暗夜·浓雾（隐）
+  [0xd6dadd, 0.45, 66],  // 8 亮晨
+  [0xe6eaee, 0.35, 72],  // 9 晴（淡而高）
+  [0xb4bac2, 0.5, 62],   // 10 阴
+  [0xe8c9a0, 0.45, 68],  // 11 黄昏（暖）
+];
+
 export class Weather {
   // refs: { sun, hemi, seaMat, seaUniforms, indoor:{ceiling[],fire,candles[]}, flames[], candleFlames[] }
   constructor(scene, renderer, refs) {
@@ -140,6 +156,15 @@ export class Weather {
     }
     refs.indoor.fire.intensity = refs.indoor.fire.userData.base * p.indoor.fire;
     for (const L of refs.indoor.candles) L.intensity = L.userData.base * p.indoor.candle;
+    // 高空云天气联动（调色/不透明度/高度；雾天隐藏）
+    if (refs.clouds?.length) {
+      const c = CLOUD_PRESETS[n];
+      for (const cl of refs.clouds) {
+        for (const m of cl.mats) { m.color.setHex(c[0]); m.opacity = c[1]; }
+        cl.obj.visible = c[1] > 0.01;
+        cl.obj.position.y = c[2];
+      }
+    }
     this.preset = p;
     return p;
   }
@@ -201,5 +226,14 @@ export class Weather {
     }
     this.flash *= Math.exp(-7 * dt);
     this.flashLight.intensity = this.flash;
+
+    // 高空云缓慢漂移（大尺度，出界回卷）
+    if (this.refs.clouds?.length) {
+      for (const cl of this.refs.clouds) {
+        if (!cl.obj.visible) continue;
+        cl.obj.position.x += cl.speed * dt;
+        if (cl.obj.position.x > 130) cl.obj.position.x = -130;
+      }
+    }
   }
 }
