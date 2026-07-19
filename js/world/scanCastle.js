@@ -7,7 +7,9 @@ import { GLTFLoader } from '../vendor/GLTFLoader.js';
 
 const URL = 'assets/models/scene/castle.glb';
 const KEEP_MESHES = new Set([6, 7]);            // 建筑主体；其余为树/地面
-const BOX = { x0: 3.0, x1: 8.2, y0: -1, y1: 32, z0: -4, z1: 8 }; // 门楼区段（raw，探针实证；前缘裁至 8.2 防贴脸）
+const BOX = { x0: 3.0, x1: 8.2, y0: -1, y1: 32, z0: -2.4, z1: 5.2 }; // 门楼区段（raw：z0 裁左界撕裂边、z1 裁左侧半断面窄塔）
+const CUT2 = { x0: 2.6, x1: 6.8, y0: 7.2, y1: 14.5, z0: -2.6, z1: 1.6 }; // 反切：门洞上方垂挂藤蔓/碎布簇（raw；探针实证簇 z -2.3~-0.8）
+const CUT3 = { x0: 2.6, x1: 4.6, y0: 5.0, y1: 7.9, z0: -2.5, z1: 0.3 }; // 反切：垂挂簇下段残留（raw；游戏 x1.2~4.0/y5.3~8.2/z7.5~9.5，避开 y<5 门脸结构与中央门窗）
 const RY = -Math.PI / 2;
 const POS = { x: 1.5, y: 0.3, z: 4.9 };         // 拱门中心 x≈0、门脸 z≈12.9（露台缘）、后部 z≈7.9 没入别墅南墙
 
@@ -60,7 +62,10 @@ export async function buildScanCastle(scene, collision) {
         vv.fromBufferAttribute(pos, idx[i + k]).applyMatrix4(o.matrixWorld);
         cx += vv.x / 3; cy += vv.y / 3; cz += vv.z / 3;
       }
-      if (cx > BOX.x0 && cx < BOX.x1 && cy > BOX.y0 && cy < BOX.y1 && cz > BOX.z0 && cz < BOX.z1) {
+      const inBox = cx > BOX.x0 && cx < BOX.x1 && cy > BOX.y0 && cy < BOX.y1 && cz > BOX.z0 && cz < BOX.z1;
+      const inCut2 = cx > CUT2.x0 && cx < CUT2.x1 && cy > CUT2.y0 && cy < CUT2.y1 && cz > CUT2.z0 && cz < CUT2.z1;
+      const inCut3 = cx > CUT3.x0 && cx < CUT3.x1 && cy > CUT3.y0 && cy < CUT3.y1 && cz > CUT3.z0 && cz < CUT3.z1;
+      if (inBox && !inCut2 && !inCut3) {
         kept++; keepIdx.push(idx[i], idx[i + 1], idx[i + 2]);
       }
     }
@@ -71,7 +76,7 @@ export async function buildScanCastle(scene, collision) {
   });
   for (const m of mats) {
     // 烘焙日光压暗（MeshBasicMaterial 不受光照，全靠调色；显式 sRGB 输入，避免线性空间换算变亮）
-    if (m.color) m.color.setRGB(0.38, 0.41, 0.47, THREE.SRGBColorSpace);
+    if (m.color) m.color.setRGB(0.60, 0.64, 0.70, THREE.SRGBColorSpace);
     if (m.roughness !== undefined) m.roughness = Math.min(1, (m.roughness ?? 1) * 1.05);
   }
   console.log('[scanCastle] 立面移植保留 tris:', kept);
