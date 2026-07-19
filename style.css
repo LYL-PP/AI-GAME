@@ -176,6 +176,33 @@ html, body {
   font-size: 12px; letter-spacing: 3px; color: rgba(232, 221, 201, 0.45);
 }
 
+/* ---------- 地图覆盖层（M 开关，js/ui/map.js） ---------- */
+#mapOverlay {
+  position: fixed; inset: 0; z-index: 26; display: none;
+  background: rgba(10, 13, 18, 0.88);
+}
+#mapOverlay.show { display: flex; align-items: center; justify-content: center; }
+#mapOverlay .map-frame { position: relative; text-align: center; }
+#mapOverlay canvas {
+  width: min(86vh, 92vw); height: min(86vh, 92vw);
+  background: #141a24;
+}
+#mapOverlay .map-title {
+  font-size: 20px; letter-spacing: 6px; color: #d98e4a; margin-bottom: 10px;
+}
+#mapOverlay .map-tabs {
+  display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;
+}
+#mapOverlay .map-tabs button {
+  font-family: inherit; font-size: 14px; letter-spacing: 3px;
+  padding: 3px 16px; cursor: pointer;
+  color: #d98e4a; background: transparent; border: 1px solid rgba(217, 142, 74, 0.55);
+}
+#mapOverlay .map-tabs button.on { background: #d98e4a; color: #10131a; }
+#mapOverlay .map-hint {
+  margin-top: 10px; font-size: 12px; letter-spacing: 3px; color: rgba(232, 221, 201, 0.45);
+}
+
 /* ---------- 对话框 ---------- */
 #dlgBox {
   position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);

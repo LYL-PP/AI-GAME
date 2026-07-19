@@ -6,7 +6,9 @@
       "interact": "E — 交互 / 检视",
       "notebook": "Tab — 笔记本",
       "nav": "Q — 章节导航",
-      "pause": "Esc — 暂停"
+      "pause": "Esc — 暂停",
+      "map": "M — 地图",
+      "mute": "N — 静音"
     },
     "notebook": {
       "title": "速记本",

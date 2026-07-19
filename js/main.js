@@ -23,11 +23,12 @@ import { Emptiness } from './story/emptiness.js';
 import { NavPanel } from './ui/navPanel.js';
 import { buildCastleShell } from './world/castle.js';
 import { DockCutscene } from './story/dockCutscene.js';
+import { GameMap } from './ui/map.js';
 
 const params = new URLSearchParams(location.search);
 
 async function loadData() {
-  const files = ['places', 'chapters', 'ui', 'characters', 'schedules', 'dialogue', 'accusation', 'deaths', 'rhyme', 'clueSpots', 'clues', 'endings', 'confession', 'annotations', 'audio'];
+  const files = ['places', 'chapters', 'ui', 'characters', 'schedules', 'dialogue', 'accusation', 'deaths', 'rhyme', 'clueSpots', 'clues', 'endings', 'confession', 'annotations', 'audio', 'map'];
   const out = await Promise.all(
     files.map((f) =>
       fetch(`data/${f}.json`, { cache: 'no-cache' }).then((r) => {
@@ -40,7 +41,7 @@ async function loadData() {
     places: out[0].places, chapters: out[1].chapters, ui: out[2].ui,
     characters: out[3].characters, schedules: out[4], dialogue: out[5], accusation: out[6],
     deaths: out[7].deaths, rhyme: out[8], clueSpots: out[9].clueSpots || out[9], clues: out[10],
-    endings: out[11], confession: out[12], annotations: out[13], audio: out[14],
+    endings: out[11], confession: out[12], annotations: out[13], audio: out[14], map: out[15],
   };
 }
 
@@ -224,6 +225,15 @@ async function boot() {
     data: data.endings.dockCutscene,
   });
   window.__dockCS = dockCS;
+  // 游戏内地图（M 开关；岛图/楼层图自动切换）
+  const gameMap = new GameMap({
+    player: null, chapterManager, prologue, ui, mapData: data.map,
+    insideVilla: () => {
+      const f = player?.feet ?? { x: 0, y: 0, z: 0 };
+      return f.x > -12.4 && f.x < 12.4 && f.z > -8.4 && f.z < 8.4 && f.y > 1.5 && f.y < 11.2;
+    },
+  });
+  window.__map = gameMap;
 
   // ---------- 章节跳转（复用现有系统函数） ----------
   function jumpToChapter(n, carryClues = true) {
@@ -401,6 +411,7 @@ async function boot() {
   chapterManager.player = player;
   endings.player = player;
   dockCS.player = player;
+  gameMap.player = player;
   player.spawn(island.spawn.x, island.spawn.z, island.spawn.yaw);
   if (save.data.prologueDone && startChapter === 0) prologue.state = 'done';
   if (params.get('pos')) {
@@ -532,6 +543,19 @@ async function boot() {
       }
       return;
     }
+    if (e.code === 'KeyM') {
+      e.preventDefault();
+      gameMap.toggle();
+      if (!gameMap.isOpen() && !playMode) renderer.domElement.requestPointerLock();
+      return;
+    }
+    if (gameMap.isOpen()) {
+      if (e.code === 'Escape') {
+        gameMap.close_();
+        if (!playMode) renderer.domElement.requestPointerLock();
+      }
+      return;
+    }
     if (e.code === 'Tab') {
       e.preventDefault();
       notebook.toggle();
@@ -581,7 +605,7 @@ async function boot() {
   let perfLogged = false;
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.1);
-    if (endings.active || dialogue.isOpen() || figurines.active || notebook.isOpen() || navPanel.isOpen() || dockCS.playing) player.enabled = false;
+    if (endings.active || dialogue.isOpen() || figurines.active || notebook.isOpen() || navPanel.isOpen() || dockCS.playing || gameMap.isOpen()) player.enabled = false;
     else if (!prologue.cineActive && prologue.state !== 'take_seat') player.enabled = true;
     player.update(dt);
     npcManager.collide(player.feet, 0.35);
@@ -596,6 +620,7 @@ async function boot() {
     chapterManager.update(dt);
     schedule.update(dt);
     prologue.update(dt);
+    gameMap.update(dt);
     dialogue.update(dt);
     figurines.update(dt);
     endings.update(dt);

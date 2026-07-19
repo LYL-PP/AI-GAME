@@ -26,7 +26,7 @@ export class AudioEngine {
     document.addEventListener('pointerdown', start);
     document.addEventListener('keydown', start);
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyM') this.toggleMute();
+      if (e.code === 'KeyN') this.toggleMute();
     });
   }
 
