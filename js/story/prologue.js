@@ -119,6 +119,14 @@ export class Prologue {
     this.nextStep();
   }
 
+  // 指控运镜目标高度：rigged 角色（sitting clip，坐椅面 ~0.45m）≈F1+1.28；
+  // Kenney（程序化坐姿，整体下沉 0.42）≈F1+0.87h-0.42，头脸居画面中央
+  _headY(npc) {
+    if (npc?.rigged) return F1 + 1.28;
+    const h = npc?.spec?.h ?? 1.75;
+    return F1 + 0.87 * h - 0.42;
+  }
+
   nextStep() {
     this.step = this.stepQueue.shift();
     if (!this.step) { this.restore(); return; }
@@ -132,17 +140,18 @@ export class Prologue {
         this.camTo(ps.x, F1 + 1.02, ps.z, GRAM.x, GRAM.y, GRAM.z, 1.4);
       } else {
         const tgt = this.mgr.get(s.targetId);
+        const hy = this._headY(tgt);
         const seat = seatPos(this.seatOf[s.targetId]);
-        let look = { x: seat.x, y: F1 + 1.0, z: seat.z };
+        let look = { x: seat.x, y: hy, z: seat.z };
         if (s.jointWith) {
           const s2 = seatPos(this.seatOf[s.jointWith]);
-          look = { x: (seat.x + s2.x) / 2, y: F1 + 1.0, z: (seat.z + s2.z) / 2 };
+          look = { x: (seat.x + s2.x) / 2, y: hy, z: (seat.z + s2.z) / 2 };
           const n2 = this.mgr.get(s.jointWith);
           n2?.playReaction(REACT[s.jointWith] || 'stiffen', 6);
         }
         this.camTo(
-          look.x + (TABLE.x - look.x) * 0.55, F1 + 1.35, look.z + (TABLE.z - look.z) * 0.55,
-          look.x, look.y, look.z, 1.3
+          look.x + (TABLE.x - look.x) * 0.45, hy + 0.08, look.z + (TABLE.z - look.z) * 0.45,
+          look.x, look.y - 0.02, look.z, 1.3
         );
         tgt?.playReaction(REACT[s.targetId] || 'stiffen', 6);
       }
@@ -156,7 +165,7 @@ export class Prologue {
       const rog = this.mgr.get('rogers');
       mrs?.setAction('faint');
       const ms = seatPos(this.seatOf.mrs_rogers);
-      this.camTo(ms.x + (TABLE.x - ms.x) * 0.5, F1 + 1.3, ms.z + (TABLE.z - ms.z) * 0.5, ms.x, F1 + 0.5, ms.z, 1.2);
+      this.camTo(ms.x + (TABLE.x - ms.x) * 0.5, this._headY(mrs) + 0.1, ms.z + (TABLE.z - ms.z) * 0.5, ms.x, F1 + 0.45, ms.z, 1.2);
       this.say('', '（罗杰斯太太滑下了椅子。）');
       if (rog) {
         rog.setAction('idle');

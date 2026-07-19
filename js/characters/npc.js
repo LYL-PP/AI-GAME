@@ -219,6 +219,9 @@ export class NPC {
     const kid = def.modelHint?.kenney;
     if (RIGGED_DEFS[def.id] && kenneyLib?.rigged?.[def.id]) {
       const rig = kenneyLib.rigged[def.id];
+      // Meshy 模型本地前向为 +z，与全工程"朝向=-(sin yaw,cos yaw)"约定相反：
+      // 内层根节点预转 π，使 movers/座位/站位 yaw 语义统一（endings 法官独立实例不受影响）
+      for (const o of Object.values(rig.items)) o.root.rotation.y = Math.PI;
       this.rigCfg = RIGGED_DEFS[def.id];
       this.kenney = true;
       this.rigged = rig;
@@ -531,7 +534,7 @@ export class NPCManager {
         const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
         tex.flipY = false;
         tex.colorSpace = THREE.SRGBColorSpace;
-        rig.applyPortraitProjection(tex, { marginX: 0.12 });
+        rig.applyPortraitProjection(tex, { marginX: 0.04 });   // 收缩采样防手臂取到立绘灰底（维拉灰臂）
         rig.group.visible = false;
         scene.add(rig.group);
         lib.rigged[id] = rig;

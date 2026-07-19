@@ -160,7 +160,7 @@ export function buildIsland(scene, collision, data) {
   let rockGeo = new THREE.IcosahedronGeometry(1, 0);
   if (rock2Parts) {
     rockGeo = rock2Parts[0].geometry;
-    decimate(rockGeo, 2);
+    decimate(rockGeo, 4);
     rockGeo.scale(0.005, 0.004, 0.005);   // ~2.5×1.3×1.1m 基础块
   }
   const rockCount = 190;
@@ -239,10 +239,11 @@ export function buildIsland(scene, collision, data) {
   if (grassParts) {
     const ggeo = grassParts[0].geometry;
     cutGeometryBox(ggeo, { x0: -750, x1: 750, y0: -1e9, y1: 1e9, z0: -750, z1: 750 });   // 中央 ~1.5m 见方
-    decimate(ggeo, 3);
+    decimate(ggeo, 5);
     const gmat = grassParts[0].material.clone();
-    gmat.color.setRGB(0.5, 0.55, 0.45, THREE.SRGBColorSpace);
-    const G_N = 16;
+    gmat.color.setRGB(0.62, 0.68, 0.52, THREE.SRGBColorSpace);   // 阴天提亮（青草层次）
+    if (gmat.emissive) { gmat.emissive.setHex(0x101a08); gmat.emissiveIntensity = 0.45; }
+    const G_N = 12;
     const gmesh = new THREE.InstancedMesh(ggeo, gmat, G_N);
     const gd = new THREE.Object3D();
     let gn = 0, gseed = 13;

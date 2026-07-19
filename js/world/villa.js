@@ -233,9 +233,16 @@ export function buildVilla(scene, collision, data, opts = {}) {
     trim.box(3.2, 0.25, 1.4, -5.0, ROOF + 1.05, -2.1);    // 烟囱帽
     intw.box(1.8, 1.1, 0.15, -5.0, F1 + 0.55, -1.95);     // 炉膛暗腔
   } else {
-    const fp = buildProp(fireParts, { decimateN: 2, tint: [0.82, 0.79, 0.74], castShadow: true });
+    const fp = buildProp(fireParts, { decimateN: 3, tint: [0.82, 0.79, 0.74], castShadow: true });
     fp.scale.set(1.2, 1.45, 1.1);   // 2.4×1.88×0.82，顶平贴台面底（F1+1.88）
     fp.position.set(-5.0, F1 + 0.94, -0.75);   // 扫描北墙面 z≈-0.92（实测），整组前挑
+    // 炉膛自发光压曝（保留白石雕细节）
+    fp.traverse((o) => {
+      if (o.isMesh && o.material?.emissive && (o.material.name || '').toLowerCase().includes('fire')) {
+        o.material = o.material.clone();
+        o.material.emissiveIntensity = 0.3;
+      }
+    });
     g.add(fp);
   }
   marble.box(3.5, 0.11, 0.95, -5.0, F1 + 1.9, -0.5);   // 壁炉台面（瓷人列位，前挑）
@@ -345,7 +352,7 @@ export function buildVilla(scene, collision, data, opts = {}) {
     // 大厅顶灯（chandelier.glb，139 mesh 合并减面；净高 ≥2.2m；失败回退深色吊灯罩）
     const chandParts = getParts('chandelier');
     if (chandParts) {
-      const ch = buildProp(chandParts, { decimateN: 3, tint: [0.55, 0.5, 0.45], castShadow: false });
+      const ch = buildProp(chandParts, { decimateN: 4, tint: [0.55, 0.5, 0.45], castShadow: false });
       ch.scale.setScalar(0.15);
       ch.position.set(0, F1 + 2.575, 2.9);   // 底沿 4.0m（净高 2.2m）、顶 4.94m < 楼板 5.0
       g.add(ch);
@@ -458,9 +465,11 @@ export function buildVilla(scene, collision, data, opts = {}) {
   let hallChairs = null;
   if (chairParts) {
     const cgeo = chairParts[0].geometry;
-    decimate(cgeo, 2);
+    decimate(cgeo, 3);
     const cmat = chairParts[0].material.clone();
-    cmat.color.setRGB(0.45, 0.42, 0.38, THREE.SRGBColorSpace);   // 金漆骨架压暗适配项目色板
+    cmat.color.setRGB(0.42, 0.38, 0.34, THREE.SRGBColorSpace);   // 金漆压暗
+    if (cmat.metalness !== undefined) cmat.metalness = 0.15;     // 哑光深木感
+    if (cmat.roughness !== undefined) cmat.roughness = 0.85;
     hallChairs = new THREE.InstancedMesh(cgeo, cmat, 29);
     const zero = new THREE.Matrix4().makeScale(0, 0, 0);
     for (let k = 0; k < 29; k++) hallChairs.setMatrixAt(k, zero);
@@ -760,7 +769,7 @@ export function buildVilla(scene, collision, data, opts = {}) {
       mkPoint(0xffd9a0, 20, 16, 2, F2 + 2.3, 0),       // 二层走廊
       mkPoint(0xffd9a0, 20, 16, 0, F3 + 2.3, 0),       // 书房
     ],
-    fire: mkPoint(0xff8f3f, 18, 12, -5.0, F1 + 0.9, -0.7),
+    fire: mkPoint(0xffa45c, 11, 12, -5.0, F1 + 0.9, -0.7),   // 降强度/色温（瓷人保持白瓷不镀金）
     candles: [
       mkPoint(0xd98e4a, 7, 8, -5.0, F1 + 2.4, -1.5),   // 壁炉台烛
       mkPoint(0xd98e4a, 6, 8, 2.5, F1 + 1.3, 4.0),     // 餐桌烛

@@ -177,7 +177,7 @@ export async function buildKenneyShell(scene, collision, opts = {}) {
 
   // 立面移植接缝盖板（扫描门楼与 Kenney 南墙之间，深色石柱面遮缝）
   if (skipSC) {
-    const seamMat = new THREE.MeshLambertMaterial({ color: 0x8a9096 });
+    const seamMat = new THREE.MeshLambertMaterial({ color: 0x5f666d });   // 调暗（防 Kenney 门灯洗白盖过门楼）
     for (const [sx0, sx1] of [[5.3, 7.35], [-7.95, -5.9]]) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(sx1 - sx0, 10.0, 0.26), seamMat);
       m.position.set((sx0 + sx1) / 2, 1.8 + 5.0, ZO + 0.02);
@@ -248,9 +248,9 @@ export async function buildKenneyShell(scene, collision, opts = {}) {
       g.translate(lx, 3.35, ZO + 1.05);
       return g;
     })());
-    const L = new THREE.PointLight(0xd98e4a, 3, 7, 1.8);
+    const L = new THREE.PointLight(0xd98e4a, 2.0, 7, 1.8);
     L.position.set(lx, 3.4, ZO + 1.05);
-    L.userData.base = 3;
+    L.userData.base = 2.0;
     lanternLights.push(L);
     shell.add(L);
   }
