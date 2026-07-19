@@ -118,6 +118,15 @@ export async function preloadSceneProps(defs) {
 
 export function getParts(name) { return _parts.get(name) ?? null; }
 
+// sofa.glb（Chesterfield，本地坐向 +z）：按目标座宽缩放；调用方负责 rotation.y = 落座 yaw + π
+export function sofaInstance(width, { tint = [0.58, 0.53, 0.49], castShadow = true } = {}) {
+  const parts = getParts('sofa');
+  if (!parts) return null;
+  const g = buildProp(parts, { tint, castShadow });
+  g.scale.setScalar(0.01 * (width / 1.626));   // 原料 FBX cm 单位，烘焙宽 162.6
+  return g;
+}
+
 // 组装成 Group（可选减面/调色/投影设置）；material 克隆一次避免跨件串色
 export function buildProp(parts, { decimateN = 1, tint = null, castShadow = false, receiveShadow = true } = {}) {
   const g = new THREE.Group();

@@ -105,6 +105,7 @@ async function boot() {
     candelabra: 'assets/models/scene/candelabra.glb',
     chandelier: 'assets/models/scene/chandelier.glb',
     rug: 'assets/models/scene/rug.glb',
+    sofa: 'assets/models/scene/sofa.glb',
     jetty: 'assets/models/scene/jetty.glb',
     rock1: 'assets/models/scene/rock1.glb',
     rock2: 'assets/models/scene/rock2.glb',

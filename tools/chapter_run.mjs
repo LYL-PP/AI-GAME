@@ -64,8 +64,9 @@ async function main() {
     // 触发死亡
     const triggered = await evaljs('StoryAPI.triggerDeath()');
     check(`ch${ch} 死亡触发`, triggered === true);
-    // 演出章节（1/9）先等事件播完进入 await
-    for (let i = 0; i < 40; i++) { await sleep(500); const s2 = await evaljs('ChapterAPI.state()'); if (s2 === 'await') break; }
+    // 演出章节（1/9）先等事件播完进入 await（无头 SwiftShader 下 sim 膨胀 ~5x，
+    // ch9 演出 5s sim 需 25s+ 真实，20s 窗口会在 lockSpot 激活期 teleport 被弹飞）
+    for (let i = 0; i < 120; i++) { await sleep(500); const s2 = await evaljs('ChapterAPI.state()'); if (s2 === 'await') break; }
     await sleep(300);
     // 玩家抵达现场
     const spot = await evaljs('JSON.stringify(ChapterAPI.sceneSpot())');
@@ -74,6 +75,10 @@ async function main() {
     // 等待进入 scene 状态
     let st = '';
     for (let i = 0; i < 20; i++) { await sleep(500); st = await evaljs('ChapterAPI.state()'); if (st === 'scene') break; }
+    if (st !== 'scene') {
+      const dbgP = await evaljs('JSON.stringify(DebugAPI.getState())');
+      console.log(`  [dbg] ch${ch} spot=${spot} feet=${dbgP}`);
+    }
     check(`ch${ch} 抵达现场(scene)`, st === 'scene', `state=${st}`);
     if (SHOT_AT.has(ch)) { await sleep(1500); await shot(`death_ch${ch}.png`); }
     // 结算（轮询至结算完成，跳过演出等待）

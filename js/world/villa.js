@@ -5,7 +5,7 @@ import {
   GeoBatch, MAT, textPanel, figurineBases, gramophone, marbleStatue,
   bearClock, armchair, bedGeometries, chairGeometry, deskGeometry, nightstandGeometry,
 } from './props.js';
-import { getParts, buildProp, decimate } from './sceneProps.js';
+import { getParts, buildProp, decimate, sofaInstance } from './sceneProps.js';
 
 const F1 = 1.8, F2 = 5.0, F3 = 8.2;          // 各层地面标高
 const T1 = 4.75, T2 = 7.95, T3 = 11.15;      // 各层墙顶标高
@@ -321,13 +321,20 @@ export function buildVilla(scene, collision, data, opts = {}) {
   statue.position.set(-6.4, F1, 6.4);
   g.add(statue);
   collision.addBox(-6.8, F1, 6.0, -6.0, F1 + 1.0, 6.8);
-  // 扶手椅 ×2 + 地毯
+  // 扶手椅 ×2（sofa.glb Chesterfield 单人位，替换暗红方块；rotation.y=yaw+π 对齐落座朝向）+ 地毯
   for (const [ax, az, ary] of [[-2.5, 5.5, 2.6], [-2.5, 2.6, 0.5]]) {
-    const ac = armchair();
-    ac.position.set(ax, F1, az);
-    ac.rotation.y = ary;
-    g.add(ac);
-    collision.addBox(ax - 0.45, F1, az - 0.45, ax + 0.45, F1 + 0.9, az + 0.45);
+    const so = sofaInstance(1.1);
+    if (so) {
+      so.position.set(ax, F1, az);
+      so.rotation.y = ary + Math.PI;
+      g.add(so);
+    } else {
+      const ac = armchair();
+      ac.position.set(ax, F1, az);
+      ac.rotation.y = ary;
+      g.add(ac);
+    }
+    collision.addBox(ax - 0.55, F1, az - 0.5, ax + 0.55, F1 + 0.95, az + 0.5);
   }
   // 地毯（rug.glb 波斯毯，遮扫描地板孔洞；失败回退程序化毯）
   const rugParts = getParts('rug');
@@ -598,13 +605,20 @@ export function buildVilla(scene, collision, data, opts = {}) {
   }
   books.count = bk;
   g.add(books);
-  // 扶手椅 ×2
+  // 扶手椅 ×2（书房；sofa.glb 单人位替换方块占位）
   for (const [ax, az, ary] of [[2.5, 5.0, -2.3], [4.2, 3.2, 2.9]]) {
-    const ac = armchair();
-    ac.position.set(ax, F3, az);
-    ac.rotation.y = ary;
-    g.add(ac);
-    collision.addBox(ax - 0.45, F3, az - 0.45, ax + 0.45, F3 + 0.9, az + 0.45);
+    const so = sofaInstance(1.1);
+    if (so) {
+      so.position.set(ax, F3, az);
+      so.rotation.y = ary + Math.PI;
+      g.add(so);
+    } else {
+      const ac = armchair();
+      ac.position.set(ax, F3, az);
+      ac.rotation.y = ary;
+      g.add(ac);
+    }
+    collision.addBox(ax - 0.55, F3, az - 0.5, ax + 0.55, F3 + 0.95, az + 0.5);
   }
   carpet.box(5.5, 0.02, 4.5, 0, F3 + 0.012, 1.0);
   // 红色窗帘（布料垂坠：正弦褶皱）

@@ -1,6 +1,7 @@
 // schedule.js —— 日程状态机：schedules.json 驱动 NPC 位置/动作 + 室内航点寻路
 import * as THREE from '../vendor/three.module.js';
 import { GeoBatch, MAT, armchair } from '../world/props.js';
+import { sofaInstance } from '../world/sceneProps.js';
 
 const F1 = 1.8, F2 = 5.0, F3 = 8.2;
 
@@ -115,20 +116,34 @@ export class ScheduleManager {
     });
     g.add(bottles.mesh(MAT.green));
     this.col.addBox(-7.95, F1, -1.35, -7.15, F1 + 1.05, 0.95);
-    // 摇椅（布伦特专座，靠窗）
-    const rocker = armchair(MAT.redWood);
-    rocker.position.set(-5.5, F1, 6.3);
-    rocker.rotation.y = 0.35;
-    g.add(rocker);
-    this.col.addBox(-6.0, F1, 5.85, -5.0, F1 + 0.9, 6.75);
-    // 双人沙发（南墙侧）
-    const sofa = new GeoBatch();
-    sofa.box(1.5, 0.32, 0.66, 6.3, F1 + 0.28, 6.55);
-    sofa.box(1.5, 0.62, 0.18, 6.3, F1 + 0.62, 6.86);
-    sofa.box(0.16, 0.32, 0.62, 5.63, F1 + 0.52, 6.55);
-    sofa.box(0.16, 0.32, 0.62, 6.97, F1 + 0.52, 6.55);
-    g.add(sofa.mesh(MAT.clothRed, { cast: true }));
-    this.col.addBox(5.5, F1, 6.2, 7.1, F1 + 0.95, 6.95);
+    // 摇椅（布伦特专座，靠窗；sofa.glb 单人位替换方块扶手椅，坐向对齐落座 yaw）
+    const rocker = sofaInstance(1.1);
+    if (rocker) {
+      rocker.position.set(-5.5, F1, 6.3);
+      rocker.rotation.y = 0.35 + Math.PI;
+      g.add(rocker);
+    } else {
+      const rk = armchair(MAT.redWood);
+      rk.position.set(-5.5, F1, 6.3);
+      rk.rotation.y = 0.35;
+      g.add(rk);
+    }
+    this.col.addBox(-6.05, F1, 5.85, -4.95, F1 + 0.95, 6.75);
+    // 双人沙发（南墙侧；sofa.glb 双人位替换暗红方块，座面中心对齐 poi (6.3, 6.4)）
+    const sofa2 = sofaInstance(1.8);
+    if (sofa2) {
+      sofa2.position.set(6.3, F1, 6.55);
+      sofa2.rotation.y = Math.PI;
+      g.add(sofa2);
+    } else {
+      const sofa = new GeoBatch();
+      sofa.box(1.5, 0.32, 0.66, 6.3, F1 + 0.28, 6.55);
+      sofa.box(1.5, 0.62, 0.18, 6.3, F1 + 0.62, 6.86);
+      sofa.box(0.16, 0.32, 0.62, 5.63, F1 + 0.52, 6.55);
+      sofa.box(0.16, 0.32, 0.62, 6.97, F1 + 0.52, 6.55);
+      g.add(sofa.mesh(MAT.clothRed, { cast: true }));
+    }
+    this.col.addBox(5.4, F1, 5.85, 7.2, F1 + 1.05, 7.25);
     this.scene.add(g);
   }
 
