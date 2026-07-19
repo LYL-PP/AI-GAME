@@ -1,17 +1,29 @@
-// scanCastle.js —— castle.glb 立面移植（facade graft）：只取门楼/正立面区段作别墅南立面
-// 历史：整体包围三轮失败（见 git 历史），降级为"写实门面 + Kenney 侧背"。
-// 裁剪：三角心框选保留 raw x∈[5.5,9.5]（门楼前段 4m 厚）、z∈[-4,8]（12m 宽立面），~5k tris；
-// 对齐：rotation.y=-90°（门朝 +Z 码头），原比例 1.0，拱门中心对 x=0，立面脸 z≈10.4（后部没入别墅南墙）。
+// scanCastle.js —— 城堡外观（castle.glb 摄影测量件）
+// 模式（回退开关）：
+//   'whole' 整体 castle.glb 作城堡外观（2026-07 用户最终裁定；v3 2.0 倍内院方案 + 塔基 CUT）
+//   'graft' 立面移植门面目 + Kenney 侧背（前方案，代码保留可回退）
+//   'off'   纯 Kenney 外壳
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
 
+const MODE = 'whole';
 const URL = 'assets/models/scene/castle.glb';
-const KEEP_MESHES = new Set([6, 7]);            // 建筑主体；其余为树/地面
-const BOX = { x0: 3.0, x1: 8.2, y0: -1, y1: 32, z0: -2.4, z1: 5.2 }; // 门楼区段（raw：z0 裁左界撕裂边、z1 裁左侧半断面窄塔）
-const CUT2 = { x0: 2.6, x1: 6.8, y0: 7.2, y1: 14.5, z0: -2.6, z1: 1.6 }; // 反切：门洞上方垂挂藤蔓/碎布簇（raw；探针实证簇 z -2.3~-0.8）
-const CUT3 = { x0: 2.6, x1: 4.6, y0: 5.0, y1: 7.9, z0: -2.5, z1: 0.3 }; // 反切：垂挂簇下段残留（raw；游戏 x1.2~4.0/y5.3~8.2/z7.5~9.5，避开 y<5 门脸结构与中央门窗）
-const RY = -Math.PI / 2;
-const POS = { x: 1.5, y: 0.3, z: 4.9 };         // 拱门中心 x≈0、门脸 z≈12.9（露台缘）、后部 z≈7.9 没入别墅南墙
+const KEEP_MESHES = new Set([6, 7]); // 建筑主体（主堡+塔楼+门楼）；其余为树/地面扫描噪声
+
+// ---------- whole：2.0 倍内院对齐（历史 v3 参数；门脸 z≈13、门中轴对 x=0） ----------
+const S = 2.0;
+const RY = -Math.PI / 2;                          // 门楼（raw +x 面）→ +Z 码头方向
+const POS = { x: 3.0, y: -2.2, z: -3.0 };
+// 塔基切除：门楼塔基插入三层书房东墙（v3 唯一遗留问题）——w1 各内部机位复查未见复现，留空备用。
+// 当前启用：悬顶碎渣云切除（raw y>26 ≈ 游戏 y>50，直方图实证塔楼本体 y<50、其上纯碎渣）
+const CUT_TOWER = { x0: -70, x1: 40, y0: 26, y1: 40, z0: -40, z1: 75 };
+
+// ---------- graft：立面移植参数（回退保留） ----------
+const G_BOX = { x0: 3.0, x1: 8.2, y0: -1, y1: 32, z0: -2.4, z1: 5.2 };
+const G_CUT2 = { x0: 2.6, x1: 6.8, y0: 7.2, y1: 14.5, z0: -2.6, z1: 1.6 };
+const G_CUT3 = { x0: 2.6, x1: 4.6, y0: 5.0, y1: 7.9, z0: -2.5, z1: 0.3 };
+const G_RY = -Math.PI / 2;
+const G_POS = { x: 1.5, y: 0.3, z: 4.9 };
 
 function mergeGeos(list) {
   let v = 0, ic = 0;
@@ -35,17 +47,133 @@ function mergeGeos(list) {
   return out;
 }
 
-export async function buildScanCastle(scene, collision) {
+async function loadCastle() {
+  const gltf = await new GLTFLoader().loadAsync(URL);
+  return gltf;
+}
+
+// ================= whole：整体 castle.glb =================
+async function buildWhole(scene, collision) {
   let gltf;
-  try {
-    gltf = await new GLTFLoader().loadAsync(URL);
-  } catch (e) {
+  try { gltf = await loadCastle(); } catch (e) {
+    console.warn('[scanCastle] 加载失败，回退 Kenney 外壳：', e);
+    return null;
+  }
+  const model = gltf.scene;
+  model.updateMatrixWorld(true);
+  // 剔除树木/地面网格 + 塔基 CUT（三角心框选） + 整体压暗调铅灰
+  const vv = new THREE.Vector3();
+  let mi = 0, cutTris = 0;
+  const mats = new Set();
+  model.traverse((o) => {
+    if (!o.isMesh) return;
+    if (!KEEP_MESHES.has(mi++)) { o.visible = false; return; }
+    if (CUT_TOWER) {
+      const pos = o.geometry.attributes.position;
+      const idx = o.geometry.index.array;
+      const keepIdx = [];
+      for (let i = 0; i < idx.length; i += 3) {
+        let cx = 0, cy = 0, cz = 0;
+        for (let k = 0; k < 3; k++) {
+          vv.fromBufferAttribute(pos, idx[i + k]).applyMatrix4(o.matrixWorld);
+          cx += vv.x / 3; cy += vv.y / 3; cz += vv.z / 3;
+        }
+        const inCut = cx > CUT_TOWER.x0 && cx < CUT_TOWER.x1 && cy > CUT_TOWER.y0 && cy < CUT_TOWER.y1 && cz > CUT_TOWER.z0 && cz < CUT_TOWER.z1;
+        if (inCut) { cutTris++; continue; }
+        keepIdx.push(idx[i], idx[i + 1], idx[i + 2]);
+      }
+      if (keepIdx.length !== idx.length) o.geometry.setIndex(keepIdx);
+    }
+    o.castShadow = true;
+    o.receiveShadow = true;
+    mats.add(o.material);
+  });
+  if (cutTris) console.log('[scanCastle] 塔基切除 tris:', cutTris);
+  for (const m of mats) {
+    if (m.color) m.color.setRGB(0.60, 0.64, 0.70, THREE.SRGBColorSpace); // 压暗 + 铅灰蓝调
+    if (m.roughness !== undefined) m.roughness = Math.min(1, (m.roughness ?? 1) * 1.05);
+  }
+  model.scale.set(S, S, S);
+  model.rotation.y = RY;
+  const group = new THREE.Group();
+  group.name = 'scanCastle';
+  group.position.set(POS.x, POS.y, POS.z);
+  group.add(model);
+
+  // ---------- 窗火（贴扫描立面，接口同 Kenney：mats + lights 供 weather 联动） ----------
+  // raw 坐标 → 游戏坐标：gx = -z*S + POS.x；gy = y*S + POS.y；gz = x*S + POS.z
+  const G = (x, y, z) => [-z * S + POS.x, y * S + POS.y, x * S + POS.z];
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xd98e4a, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+  const glowGeos = [];
+  const WIN = [
+    [8.2, 5.5, 0.3, 0.9, 1.3, 'px'], [8.2, 5.5, 2.7, 0.9, 1.3, 'px'],   // 门楼二层
+    [8.2, 9.5, 1.5, 0.8, 1.1, 'px'],                                     // 门楼三层
+    [-3.0, 8.0, 16.9, 1.0, 1.6, 'pz'], [-8.0, 10.5, 16.9, 1.0, 1.6, 'pz'],// 主堡东南面
+    [-13.0, 9.0, 16.9, 0.9, 1.4, 'pz'],
+    [1.0, 7.0, 16.9, 0.9, 1.3, 'pz'],
+    [-5.0, 14.0, 16.9, 0.8, 1.2, 'pz'],                                  // 主堡高窗
+  ];
+  for (const [x, y, z, w, h, f] of WIN) {
+    const [gx, gy, gz] = G(x, y, z);
+    const g = new THREE.PlaneGeometry(w, h);
+    if (f === 'px') g.rotateY(Math.PI / 2); // 面向 +z（门楼面，旋转后朝码头）
+    g.translate(gx, gy, gz);
+    glowGeos.push(g);
+  }
+  const glowMesh = new THREE.Mesh(mergeGeos(glowGeos), glowMat);
+  glowMesh.renderOrder = 1;
+  group.add(glowMesh);
+  const pts = [];
+  for (const [x, y, z] of WIN) { const [gx, gy, gz] = G(x, y, z); pts.push(gx, gy, gz); }
+  pts.push(0, 4.0, 13.4, -3.2, 4.2, 13.2, 3.2, 4.2, 13.2); // 门口 + 灯笼
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+  const glowPtsMat = new THREE.PointsMaterial({
+    color: 0xffb35c, size: 2.1, transparent: true, opacity: 0.55,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
+  });
+  const glowPts = new THREE.Points(pg, glowPtsMat);
+  glowPts.renderOrder = 2;
+  group.add(glowPts);
+  // 门楼两侧灯笼
+  const lanternLights = [];
+  const lanternB = [];
+  for (const lx of [-3.2, 3.2]) {
+    const g = new THREE.BoxGeometry(0.16, 0.24, 0.16);
+    g.translate(lx, 4.15, 13.2);
+    lanternB.push(g);
+    const L = new THREE.PointLight(0xd98e4a, 3, 7, 1.8);
+    L.position.set(lx, 4.2, 13.2);
+    L.userData.base = 3;
+    lanternLights.push(L);
+    group.add(L);
+  }
+  group.add(new THREE.Mesh(mergeGeos(lanternB), new THREE.MeshBasicMaterial({ color: 0xffb35c })));
+
+  // ---------- 内院外墙碰撞（视觉翼墙近似圈；城门洞可通行，北面西半开放通悬崖动线） ----------
+  {
+    const W = (x0, z0, x1, z1) => collision.addBox(x0, -0.5, z0, x1, 12, z1);
+    W(-20, 12.9, -1.8, 13.5);   // 南墙西段
+    W(1.8, 12.9, 20, 13.5);     // 南墙东段（x ±1.8 城门洞）
+    W(19.7, -13.5, 20.3, 13.5); // 东墙
+    W(-20.3, -13.5, -19.7, 13.5); // 西墙
+    W(4, -13.6, 20, -13.0);     // 北墙东半（x<4 开放：别墅→悬崖小径动线）
+  }
+
+  scene.add(group);
+  console.log('[scanCastle] 整体扫描城堡就位（whole 模式，mesh 6/7）');
+  return { group, whole: true, windowGlow: { mats: [glowMat, glowPtsMat], lights: lanternLights } };
+}
+
+// ================= graft：立面移植（回退保留） =================
+async function buildGraft(scene, collision) {
+  let gltf;
+  try { gltf = await loadCastle(); } catch (e) {
     console.warn('[scanCastle] 加载失败，回退纯 Kenney 外壳：', e);
     return null;
   }
   const model = gltf.scene;
   model.updateMatrixWorld(true);
-  // 立面区段裁剪（三角心在框内才保留）
   const vv = new THREE.Vector3();
   let kept = 0, mi = 0;
   const mats = new Set();
@@ -62,12 +190,10 @@ export async function buildScanCastle(scene, collision) {
         vv.fromBufferAttribute(pos, idx[i + k]).applyMatrix4(o.matrixWorld);
         cx += vv.x / 3; cy += vv.y / 3; cz += vv.z / 3;
       }
-      const inBox = cx > BOX.x0 && cx < BOX.x1 && cy > BOX.y0 && cy < BOX.y1 && cz > BOX.z0 && cz < BOX.z1;
-      const inCut2 = cx > CUT2.x0 && cx < CUT2.x1 && cy > CUT2.y0 && cy < CUT2.y1 && cz > CUT2.z0 && cz < CUT2.z1;
-      const inCut3 = cx > CUT3.x0 && cx < CUT3.x1 && cy > CUT3.y0 && cy < CUT3.y1 && cz > CUT3.z0 && cz < CUT3.z1;
-      if (inBox && !inCut2 && !inCut3) {
-        kept++; keepIdx.push(idx[i], idx[i + 1], idx[i + 2]);
-      }
+      const inBox = cx > G_BOX.x0 && cx < G_BOX.x1 && cy > G_BOX.y0 && cy < G_BOX.y1 && cz > G_BOX.z0 && cz < G_BOX.z1;
+      const inCut2 = cx > G_CUT2.x0 && cx < G_CUT2.x1 && cy > G_CUT2.y0 && cy < G_CUT2.y1 && cz > G_CUT2.z0 && cz < G_CUT2.z1;
+      const inCut3 = cx > G_CUT3.x0 && cx < G_CUT3.x1 && cy > G_CUT3.y0 && cy < G_CUT3.y1 && cz > G_CUT3.z0 && cz < G_CUT3.z1;
+      if (inBox && !inCut2 && !inCut3) { kept++; keepIdx.push(idx[i], idx[i + 1], idx[i + 2]); }
     }
     o.geometry.setIndex(keepIdx);
     o.castShadow = true;
@@ -75,39 +201,35 @@ export async function buildScanCastle(scene, collision) {
     mats.add(o.material);
   });
   for (const m of mats) {
-    // 烘焙日光压暗（MeshBasicMaterial 不受光照，全靠调色；显式 sRGB 输入，避免线性空间换算变亮）
     if (m.color) m.color.setRGB(0.60, 0.64, 0.70, THREE.SRGBColorSpace);
     if (m.roughness !== undefined) m.roughness = Math.min(1, (m.roughness ?? 1) * 1.05);
   }
-  console.log('[scanCastle] 立面移植保留 tris:', kept);
   if (kept < 100) { console.warn('[scanCastle] 立面裁切为空，回退纯 Kenney'); return null; }
   model.scale.setScalar(1.0);
-  model.rotation.y = RY;
+  model.rotation.y = G_RY;
   const group = new THREE.Group();
   group.name = 'scanCastle';
-  group.position.set(POS.x, POS.y, POS.z);
+  group.position.set(G_POS.x, G_POS.y, G_POS.z);
   group.add(model);
 
-  // ---------- 窗火（门楼塔窗 + 拱门灯笼；接口同 Kenney：mats + lights 供 weather 联动） ----------
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xd98e4a, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
   const glowGeos = [];
-  // raw 坐标 → 游戏坐标：gx = -z + POS.x；gy = y + POS.y；gz = x + POS.z
-  const G = (x, y, z) => [-z + POS.x, y + POS.y, x + POS.z];
+  const G = (x, y, z) => [-z + G_POS.x, y + G_POS.y, x + G_POS.z];
   const WIN = [
-    [8.1, 8.6, 0.4, 0.7, 1.1], [8.1, 8.6, 2.6, 0.7, 1.1],   // 双塔二层窗
-    [8.1, 11.5, 1.5, 0.6, 1.0],                              // 塔顶高窗
-    [8.1, 6.0, 5.6, 0.8, 1.2],                               // 右侧墙段窗
+    [8.1, 8.6, 0.4, 0.7, 1.1], [8.1, 8.6, 2.6, 0.7, 1.1],
+    [8.1, 11.5, 1.5, 0.6, 1.0],
+    [8.1, 6.0, 5.6, 0.8, 1.2],
   ];
   for (const [x, y, z, w, h] of WIN) {
     const [gx, gy, gz] = G(x, y, z);
     const g = new THREE.PlaneGeometry(w, h);
-    g.rotateY(Math.PI / 2); // 面向 +z
+    g.rotateY(Math.PI / 2);
     g.translate(gx, gy, gz);
     glowGeos.push(g);
   }
   const glowMesh = new THREE.Mesh(mergeGeos(glowGeos), glowMat);
   glowMesh.renderOrder = 1;
-  scene.add(glowMesh);   // 坐标已含 POS（世界坐标），直接挂 scene 防二次偏移
+  scene.add(glowMesh);
   const pts = [];
   for (const [x, y, z] of WIN) { const [gx, gy, gz] = G(x, y, z); pts.push(gx, gy, gz); }
   const pg = new THREE.BufferGeometry();
@@ -119,7 +241,6 @@ export async function buildScanCastle(scene, collision) {
   const glowPts = new THREE.Points(pg, glowPtsMat);
   glowPts.renderOrder = 2;
   scene.add(glowPts);
-  // 拱门两侧灯笼（弱光，贴壁不洗墙）
   const lanternLights = [];
   const lanternB = [];
   for (const lx of [-1.7, 1.7]) {
@@ -134,8 +255,13 @@ export async function buildScanCastle(scene, collision) {
   }
   scene.add(new THREE.Mesh(mergeGeos(lanternB), new THREE.MeshBasicMaterial({ color: 0xffb35c })));
 
-  // 碰撞不变（沿用别墅/门柱 AABB；门洞照常通行）
   scene.add(group);
-  console.log('[scanCastle] 立面移植就位');
+  console.log('[scanCastle] 立面移植就位（graft 回退模式）');
   return { group, windowGlow: { mats: [glowMat, glowPtsMat], lights: lanternLights } };
+}
+
+export async function buildScanCastle(scene, collision) {
+  if (MODE === 'off') return null;
+  if (MODE === 'graft') return buildGraft(scene, collision);
+  return buildWhole(scene, collision);
 }

@@ -5,7 +5,8 @@ import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { buildScanCastle } from './scanCastle.js';
 
 export async function buildCastleShell(scene, collision) {
-  const scan = await buildScanCastle(scene, collision);   // 立面移植（门楼）；失败为 null
+  const scan = await buildScanCastle(scene, collision);   // whole=整体扫描城堡 / graft=门面目 / null=纯 Kenney
+  if (scan?.whole) return scan;                            // 整体模式（用户最终裁定）：Kenney 外壳与 graft 全不建
   const kenney = await buildKenneyShell(scene, collision, { skipSouthCenter: !!scan });
   if (!kenney) return scan;                                // Kenney 全灭 → 只留门面（不应发生）
   if (!scan) return kenney;                                // 纯 Kenney

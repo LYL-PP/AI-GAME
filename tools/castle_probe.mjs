@@ -27,27 +27,23 @@ async function main() {
   await sleep(15000);
   const info = await evaljs(`(async () => {
     const THREE = await import('./js/vendor/three.module.js');
-    const out = {};
-    for (const name of ['hallScan', 'scanCastle']) {
-      const g = __scene.getObjectByName(name);
-      if (!g) { out[name] = 'missing'; continue; }
-      const vv = new THREE.Vector3(); const pts = [];
-      g.traverse((o) => {
-        if (!o.isMesh || !o.visible) return;
-        const pos = o.geometry.attributes.position, idx = o.geometry.index ? o.geometry.index.array : null;
-        if (!idx) return;
-        for (let i = 0; i < idx.length; i += 3) {
-          let cx=0, cy=0, cz=0;
-          for (let k = 0; k < 3; k++) { vv.fromBufferAttribute(pos, idx[i+k]).applyMatrix4(o.matrixWorld); cx+=vv.x/3; cy+=vv.y/3; cz+=vv.z/3; }
-          if (cy > 6.5 && cz > 5.5) pts.push([+cx.toFixed(1), +cy.toFixed(1), +cz.toFixed(1)]);
-        }
-      });
-      const stat = (a, k) => a.length ? [Math.min(...a.map(p=>p[k])), Math.max(...a.map(p=>p[k]))] : null;
-      out[name] = { n: pts.length, x: stat(pts,0), y: stat(pts,1), z: stat(pts,2), sample: pts.slice(0, 40) };
-    }
-    return out;
+    const g = __scene.getObjectByName('scanCastle');
+    if (!g) return 'no scanCastle';
+    const vv = new THREE.Vector3();
+    const hist = {};
+    let n0 = 0;
+    g.traverse((o) => {
+      if (!o.isMesh || !o.visible || !o.geometry.index) return;
+      const pos = o.geometry.attributes.position, idx = o.geometry.index.array;
+      for (let i = 0; i < idx.length; i += 3) {
+        let cx=0, cy=0, cz=0;
+        for (let k = 0; k < 3; k++) { vv.fromBufferAttribute(pos, idx[i+k]).applyMatrix4(o.matrixWorld); cx+=vv.x/3; cy+=vv.y/3; cz+=vv.z/3; }
+        if (cy > 22) { n0++; const b = Math.round(cy / 4) * 4 + '/' + Math.round(cx / 8) * 8; hist[b] = (hist[b]||0)+1; }
+      }
+    });
+    return { n: n0, hist };
   })()`);
-  console.log('HIGH:', JSON.stringify(info));
+  console.log('HIGH-DEBRIS:', JSON.stringify(info));
   ws.close(); chrome.kill(); process.exit(0);
 }
 main().catch((e) => { console.error(e); chrome.kill(); process.exit(1); });
