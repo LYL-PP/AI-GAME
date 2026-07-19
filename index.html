@@ -130,7 +130,7 @@
 </div>
 
 <!-- 标题画面 -->
-<div id="titleScreen">
+<div id="titleScreen" style="display:flex">
   <div class="title-block">
     <h1 class="game-title" id="titleName">无人生还</h1>
     <p class="game-subtitle" id="titleSub">AND THEN THERE WERE NONE</p>
@@ -138,10 +138,11 @@
     <p class="game-author" id="titleAuthor">阿加莎·克里斯蒂 原著</p>
     <p class="game-edition" id="titleEdition">游戏改编版</p>
   </div>
-  <div class="title-btns">
+  <div class="title-btns" style="display:none">
     <button id="btnContinue" class="start-btn" style="display:none"></button>
     <button id="btnStart" class="start-btn"></button>
   </div>
+  <div id="titleLoading">正在加载……</div>
   <div id="titleWarn"></div>
 </div>
 
@@ -167,7 +168,7 @@
 </div>
 
 <!-- 进入覆盖层（pointer lock 提示） -->
-<div id="startOverlay">
+<div id="startOverlay" style="display:none">
   <div class="ov-box">
     <div class="ov-deco">════════ ◆ ════════</div>
     <h1 id="ovTitle">无人生还：士兵岛</h1>

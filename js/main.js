@@ -472,6 +472,8 @@ async function boot() {
   if (!playMode) {
     startOverlay.style.display = 'none';
     titleEl.style.display = 'flex';
+    document.getElementById('titleLoading').style.display = 'none';
+    document.querySelector('#titleScreen .title-btns').style.display = 'flex';
     if (hasSave) btnContinue.style.display = 'inline-block';
     btnStart.onclick = () => {
       if (hasSave) { localStorage.removeItem('attwn_save'); location.reload(); return; }
@@ -486,6 +488,7 @@ async function boot() {
   } else if (hasSave && params.get('fresh') !== '1') {
     applySave();
   }
+  if (playMode) titleEl.style.display = 'none';   // 调试模式跳过标题页（标题默认首帧显示）
 
   // ---------- POI（点位 + 房间 + NPC + 线索） ----------
   const pois = island.pois;

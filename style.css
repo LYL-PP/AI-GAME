@@ -352,6 +352,12 @@ html, body {
   position: absolute; bottom: 4vh; font-size: 12px; letter-spacing: 1px;
   color: rgba(216, 201, 163, 0.6); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
 }
+#titleScreen #titleLoading {
+  position: absolute; bottom: 10vh; font-size: 15px; letter-spacing: 0.4em; text-indent: 0.4em;
+  color: rgba(216, 201, 163, 0.75); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  animation: titlePulse 1.6s ease-in-out infinite;
+}
+@keyframes titlePulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 @keyframes titleFadein { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; } }
 
 /* ---------- 速记本（Tab） ---------- */
