@@ -37,6 +37,7 @@ const RIGGED_DEFS = {
       Idle_12: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Idle_12_withSkin.glb',
       Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
       Running: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Running_withSkin.glb',
+      punch: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Face_Punch_Reaction_2_withSkin.glb',   // 借出：ch9 隆巴德受击
     },
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
@@ -48,6 +49,8 @@ const RIGGED_DEFS = {
       Idle_02: 'Meshy_AI_Rugged_Explorer_biped_Animation_Idle_02_withSkin.glb',
       Chair_Sit_Idle_M: 'Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
       Running: 'Meshy_AI_Rugged_Explorer_biped_Animation_Running_withSkin.glb',
+      parry: 'Meshy_AI_Rugged_Explorer_biped_Animation_Two_Handed_Parry_withSkin.glb',       // ch9 持枪戒备
+      sprint: 'Meshy_AI_Rugged_Explorer_biped_Animation_Lean_Forward_Sprint_withSkin.glb',   // 备用
     },
     idle: 'Idle_02', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_M', death: null,
@@ -547,6 +550,22 @@ export class NPCManager {
         wg.addClipModel('Chair_Sit_Idle_M', g.scene, clip);
       }
     } catch (e) { console.warn('[rigged wargrave] 借用坐姿失败，维持站姿下沉', e); }
+    // ch9 海滩对峙借用（同骨架）：隆巴德←维拉受击反应；维拉←隆巴德持枪戒备
+    try {
+      const lm = lib.rigged.lombard, vr = lib.rigged.vera;
+      if (lm && vr) {
+        const pClip = vr.items.punch?.action?.getClip();
+        if (pClip && !lm.has('punch_react')) {
+          const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.Walking);
+          lm.addClipModel('punch_react', g.scene, pClip);
+        }
+        const hClip = lm.items.parry?.action?.getClip();
+        if (hClip && !vr.has('parry_hold')) {
+          const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.vera.dir + RIGGED_DEFS.vera.files.Walking_Woman);
+          vr.addClipModel('parry_hold', g.scene, hClip);
+        }
+      }
+    } catch (e) { console.warn('[rigged] ch9 对峙借用失败', e); }
     // 统一立绘投影材质（含借用模型）
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
       const rig = lib.rigged[id];

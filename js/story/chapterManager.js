@@ -71,19 +71,33 @@ export class ChapterManager {
     m?.playReaction('choke', 2.6);
   }
 
-  // 第 9 章：海滩远观对峙
+  // 第 9 章：海滩远观对峙（骨骼动画版：隆巴德持枪戒备、维拉逼近、受击放倒）
   _eventLombard() {
     this.state = 'event';
-    this.eventStep = { kind: 'lombard', t: 0, shot: false, veraLeft: false };
+    this.eventStep = { kind: 'lombard', t: 0, shot: false, veraLeft: false, fellAt: 0, fell: false };
     const v = this.mgr.get('vera');
     const l = this.mgr.get('lombard');
     this.schedule.states.delete('vera');
     this.schedule.states.delete('lombard');
     const gy = this.current.spot.y;
-    v?.place(43.2, gy, 49.0, 0.9);
-    v?.setAction('idle');
+    // 隆巴德 Two_Handed_Parry 持枪戒备（无 clip 回退 idle）
     l?.place(45.6, gy, 50.6, -2.3);
-    l?.setAction('idle');
+    if (l?.rigged?.has('parry')) l.rigged.play('parry', { timeScale: 0.9 });
+    else l?.setAction('idle');
+    // 维拉 Idle 站定 → 缓步逼近（~1.5m，到点持枪；距离规则与节奏不变）
+    v?.place(43.2, gy, 49.0, 0.9);
+    if (v?.rigged) v.rigged.play(v.rigCfg.idle, { timeScale: 1.0 });
+    else v?.setAction('idle');
+    if (v) {
+      const route = this.schedule.route({ x: 43.2, y: gy, z: 49.0 }, { x: 44.3, y: gy, z: 49.9 });
+      this.movers.set('vera', {
+        npc: v, route, idx: 0, timeout: 3.5,
+        then: () => {
+          if (v.rigged?.has('parry_hold')) v.rigged.play('parry_hold', { timeScale: 0.9 });
+          else if (v.rigged) v.rigged.play(v.rigCfg.idle);
+        },
+      });
+    }
     // 距离限制：玩家不可靠近 26m 内
     this.lockSpot = { x: 44.5, z: 50, r: 26 };
   }
@@ -264,9 +278,19 @@ export class ChapterManager {
         setTimeout(() => fl.classList.remove('show'), 180);
         window.AudioAPI?.play?.('gunshot_beach');
         const l = this.mgr.get('lombard');
-        if (l) { l.setDeadPose('prone'); }
+        // 受击 clip（借维拉 Face_Punch_Reaction_2）→ 播完组变换放倒；无 clip 直接放倒
+        if (l?.rigged?.has('punch_react')) {
+          l.rigged.play('punch_react', { loop: false, timeScale: 1.1 });
+          ev.fellAt = ev.t + 1.5;
+        } else if (l) { l.setDeadPose('prone'); }
+        // 维拉持枪站立（借隆巴德 Two_Handed_Parry；rigged 下 armR/playReaction 无效，跳过）
         const v = this.mgr.get('vera');
-        if (v) { v.armR.rotation.x = -1.4; v.playReaction('still', 2.4); }
+        if (v?.rigged?.has('parry_hold')) v.rigged.play('parry_hold', { timeScale: 0.9 });
+        else if (v) { v.armR.rotation.x = -1.4; v.playReaction('still', 2.4); }
+      }
+      if (ev.fellAt && ev.t > ev.fellAt && !ev.fell) {
+        ev.fell = true;
+        this.mgr.get('lombard')?.setDeadPose('prone');
       }
       if (ev.t > 5.0 && !ev.veraLeft) {
         ev.veraLeft = true;
