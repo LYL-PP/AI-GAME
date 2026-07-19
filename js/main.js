@@ -113,6 +113,7 @@ async function boot() {
     rock3: 'assets/models/scene/rock3.glb',
     tree: 'assets/models/scene/tree.glb',
     cloud: 'assets/models/scene/cloud.glb',
+    boat: 'assets/models/scene/boat.glb',
     grass: 'assets/models/scene/grass.glb',
   });
   const island = buildIsland(scene, collision, data);
@@ -141,6 +142,7 @@ async function boot() {
     candleFlames: villa.candleFlames,
     windowGlow: castleRefs?.windowGlow,
     clouds: island.clouds,
+    boat: island.boat,
   });
 
   // ---------- 存档 / NPC / 日程 / 对话 / 序章 ----------

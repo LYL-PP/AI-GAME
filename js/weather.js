@@ -235,5 +235,13 @@ export class Weather {
         if (cl.obj.position.x > 130) cl.obj.position.x = -130;
       }
     }
+
+    // 码头泊船浮沉/摇晃（慢速：起伏 ±0.05m、侧倾 ±1.5°、纵摇 ±0.6°）
+    const boat = this.refs.boat;
+    if (boat) {
+      boat.position.y = boat.userData.baseY + Math.sin(this.t * 0.5) * 0.05;
+      boat.rotation.z = Math.sin(this.t * 0.37 + 1.0) * 0.026;
+      boat.rotation.x = Math.sin(this.t * 0.29 + 2.1) * 0.01;
+    }
   }
 }

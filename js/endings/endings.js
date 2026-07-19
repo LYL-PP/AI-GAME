@@ -1,6 +1,7 @@
 // endings.js —— 结局系统：判定 + 四结局演出 + 统计页 + 二周目批注钩子
 import * as THREE from '../vendor/three.module.js';
 import { GeoBatch, MAT } from '../world/props.js';
+import { getParts, buildProp } from '../world/sceneProps.js';
 import { RiggedActor } from '../characters/rigged.js';
 
 const F1 = 1.8;
@@ -155,12 +156,21 @@ export class EndingSystem {
 
   _makeBoat() {
     const g = new THREE.Group();
-    const b = new GeoBatch();
-    b.box(4.5, 0.9, 1.4, 0, 0.45, 0);
-    b.box(1.6, 0.9, 1.1, -0.4, 1.3, 0);
-    b.box(0.25, 0.9, 0.25, 0.9, 1.2, 0);
-    const hull = b.mesh(new THREE.MeshLambertMaterial({ color: 0x1c2126 }));
-    g.add(hull);
+    const parts = getParts('boat');
+    if (parts) {
+      // boat.glb Oselvar 划艇替代程序化盒船（远景剪影；演出驱动 position 不变）
+      const b = buildProp(parts, { tint: [0.28, 0.28, 0.3], castShadow: false });
+      b.scale.setScalar(1.0);   // 原料即米级（8.1m 划艇，远景剪影）
+      b.rotation.y = Math.PI * 0.5;   // 长轴对齐航向（演出向 -x/-z 行驶）
+      g.add(b);
+    } else {
+      const b = new GeoBatch();
+      b.box(4.5, 0.9, 1.4, 0, 0.45, 0);
+      b.box(1.6, 0.9, 1.1, -0.4, 1.3, 0);
+      b.box(0.25, 0.9, 0.25, 0.9, 1.2, 0);
+      const hull = b.mesh(new THREE.MeshLambertMaterial({ color: 0x1c2126 }));
+      g.add(hull);
+    }
     g.position.set(60, 0.2, 150);
     this.scene.add(g);
     this.props.push(g);

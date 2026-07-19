@@ -405,6 +405,28 @@ export function buildIsland(scene, collision, data) {
     }
   }
 
+  // ---------- 码头泊船（boat.glb Oselvar 8.1m 划艇；出生第一帧"载你来的船"；weather.update 浮沉） ----------
+  let boat = null;
+  const boatParts = getParts('boat');
+  if (boatParts) {
+    boat = buildProp(boatParts, { tint: [0.55, 0.5, 0.45], castShadow: true });
+    boat.scale.setScalar(1.0);                     // 原料即米级（2.1×1.55×8.11m）
+    boat.position.set(6.5, 0.15, 44.0);            // 栈道东侧水面：出生点（0,48）朝北右前方可见，不挡 x±3 动线
+    boat.rotation.y = 0.12;                        // 与栈道微错开，自然
+    boat.userData.baseY = 0.15;
+    group.add(boat);
+    // 系船绳：船头 → 栈道缘（简易圆柱连线）
+    const ropeA = new THREE.Vector3(6.0, 0.6, 40.5), ropeB = new THREE.Vector3(1.15, 1.35, 42.5);
+    const ropeDir = ropeB.clone().sub(ropeA);
+    const rope = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, ropeDir.length(), 5),
+      MAT.woodDark
+    );
+    rope.position.copy(ropeA).add(ropeDir.clone().multiplyScalar(0.5));
+    rope.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ropeDir.normalize());
+    group.add(rope);
+  }
+
   // ---------- 小径石板（instanced 踏步石） ----------
   const stoneGeo = new THREE.BoxGeometry(0.9, 0.07, 0.65);
   const pathLenPts = [];
@@ -476,7 +498,7 @@ export function buildIsland(scene, collision, data) {
   }
 
   return {
-    group, pois, groundHeight, seaUniforms, seaMat, clouds,
+    group, pois, groundHeight, seaUniforms, seaMat, clouds, boat,
     spawn: { x: 0, z: 48, yaw: 0 },   // 新码头出生（湾中栈道），面朝别墅（-Z）
   };
 }
