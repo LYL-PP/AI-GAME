@@ -1,5 +1,6 @@
 // npc.js —— 10 名 NPC：程序化低模人形（顶点色单材质）+ 程序动画（无骨骼）
 import * as THREE from '../vendor/three.module.js';
+import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { lam, textTexture } from '../world/props.js';
 import { KenneyLib } from './kenney.js';
 import { RiggedActor } from './rigged.js';
@@ -14,7 +15,7 @@ const RIGGED_DEFS = {
       injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
       dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
     },
-    idle: 'walking', idleTS: 0.12, walk: 'walking', walkTS: 1.0, sit: null, death: 'dying',
+    idle: 'walking', idleTS: 0.12, walk: 'walking', walkTS: 1.0, sit: 'Chair_Sit_Idle_M', death: 'dying',
   },
   marston: {
     dir: 'assets/models/characters/rigged/marston/',
@@ -331,6 +332,7 @@ export class NPC {
     // 行走由 schedule 驱动位移；这里只播动画
     if (this.rigged) {
       const rc = this.rigCfg;
+      this.rigged.setSitMix(this.seated ? 1 : 0);   // 坐姿：下半身投影渐隐入罩染，遮拉伸涂抹
       this.rigged.update(dt);
       // 死亡 clip 播放期间不干预（否则会被待机分支覆盖）
       if (this.dead || this.rigged.currentName === rc.death) return;
@@ -530,17 +532,31 @@ export class NPCManager {
     lib.rigged = {};
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
       try {
-        const rig = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20 });
-        const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
-        tex.flipY = false;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        rig.applyPortraitProjection(tex, { marginX: 0.04 });   // 收缩采样防手臂取到立绘灰底（维拉灰臂）
-        rig.group.visible = false;
-        scene.add(rig.group);
-        lib.rigged[id] = rig;
+        lib.rigged[id] = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20 });
       } catch (e) {
         console.warn(`[rigged ${id}] 日常骨骼加载失败，退回 kenney 模型`, e);
       }
+    }
+    // 沃格雷夫无原生坐姿 clip：借隆巴德同骨架 Chair_Sit_Idle_M 重定向
+    // （两者 26/26 节点、24/24 动画轨道同名，clip 可直接按名绑定）
+    try {
+      const wg = lib.rigged.wargrave, lm = lib.rigged.lombard;
+      const clip = lm?.items.Chair_Sit_Idle_M?.action?.getClip();
+      if (wg && clip && !wg.has('Chair_Sit_Idle_M')) {
+        const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.wargrave.dir + RIGGED_DEFS.wargrave.files.walking);
+        wg.addClipModel('Chair_Sit_Idle_M', g.scene, clip);
+      }
+    } catch (e) { console.warn('[rigged wargrave] 借用坐姿失败，维持站姿下沉', e); }
+    // 统一立绘投影材质（含借用模型）
+    for (const [id, def] of Object.entries(RIGGED_DEFS)) {
+      const rig = lib.rigged[id];
+      if (!rig) continue;
+      const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
+      tex.flipY = false;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      rig.applyPortraitProjection(tex, { marginX: 0.04 });   // 收缩采样防手臂取到立绘灰底（维拉灰臂）
+      rig.group.visible = false;
+      scene.add(rig.group);
     }
     return new NPCManager(scene, characters, lib);
   }
