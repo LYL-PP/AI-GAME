@@ -42,6 +42,19 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  armstrong: {
+    dir: 'assets/models/characters/rigged/armstrong/',
+    files: {
+      Quick_Walk: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Quick_Walk_withSkin.glb',
+      Dozing_Elderly: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Dozing_Elderly_withSkin.glb',
+      Chair_Sit_Idle_M: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
+      Running: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Running_withSkin.glb',
+      Walking: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Walking_withSkin.glb',
+      dying: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_dying_backwards_withSkin.glb',
+    },
+    idle: 'Dozing_Elderly', idleTS: 0.8, walk: 'Quick_Walk', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_M', death: 'dying',
+  },
   lombard: {
     dir: 'assets/models/characters/rigged/lombard/',
     files: {
@@ -330,7 +343,12 @@ export class NPC {
   update(dt, t) {
     this._t += dt;
     const tt = this._t;
-    if (this.removed || this.dead) return;
+    if (this.removed) return;
+    if (this.dead) {
+      // 死亡 clip 需 mixer 继续推进至末帧定格（line 354 跳过播放逻辑，仅驱动动画）
+      if (this.rigged) this.rigged.update(dt);
+      return;
+    }
 
     // 行走由 schedule 驱动位移；这里只播动画
     if (this.rigged) {
