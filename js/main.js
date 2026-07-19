@@ -142,8 +142,12 @@ async function boot() {
   const save = new Save();
   const npcManager = await NPCManager.create(scene, data.characters);
   const schedule = new ScheduleManager(scene, collision, npcManager, data.schedules, data.places);
-  const portraits = {};
-  for (const c of data.characters) portraits[c.id] = c.portrait?.file;
+  const portraits = {}, fullPortraits = {}, accuseNames = {};
+  for (const c of data.characters) {
+    portraits[c.id] = c.portrait?.file;
+    fullPortraits[c.id] = c.portrait?.full || c.portrait?.file;
+    accuseNames[c.id] = c.fullName || c.name;
+  }
   const dialogue = new DialoguePlayer({
     data: data.dialogue,
     save,
@@ -153,7 +157,7 @@ async function boot() {
   });
   const prologue = new Prologue({
     scene, camera, player: null, mgr: npcManager, schedule, weather, save,
-    acc: data.accusation, ui, dom: renderer.domElement,
+    acc: data.accusation, ui, dom: renderer.domElement, fullPortraits, accuseNames,
   });
 
   // ---------- 瓷人 / 死亡现场 / 线索 / 章节 ----------

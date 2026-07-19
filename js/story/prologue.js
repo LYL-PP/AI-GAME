@@ -36,7 +36,11 @@ export class Prologue {
       sub: document.getElementById('cineSub'),
       subSpeaker: document.getElementById('cineSpeaker'),
       subText: document.getElementById('cineText'),
+      accuse: document.getElementById('accusePortrait'),
+      accuseImg: document.getElementById('accuseImg'),
+      accuseName: document.getElementById('accuseName'),
     };
+    this._accuseSeq = 0;   // 淡入/淡出串行令牌（跳过/快速换条时作废旧定时器）
     this.seatOf = {};
     NPC_ORDER.forEach((id, k) => { this.seatOf[id] = [0, 1, 2, 4, 5, 6, 7, 8, 9, 10][k]; });
   }
@@ -114,6 +118,11 @@ export class Prologue {
     this.scene.add(this.fill);
     // 步骤队列
     const A = this.acc.accusation;
+    // 预加载指控全身像，避免首次淡入白闪
+    for (const c of A.charges) {
+      const src = c.targetId === 'player' ? 'assets/portraits/player.svg' : this.fullPortraits?.[c.targetId];
+      if (src) { const im = new Image(); im.src = src; }
+    }
     this.stepQueue = [
       { kind: 'intro', text: A.scriptIntro },
       ...A.charges.map((c) => ({ kind: 'charge', ...c })),
@@ -131,15 +140,42 @@ export class Prologue {
     return F1 + 0.87 * h - 0.42;
   }
 
+  // ---------- 指控全身像 ----------
+  // 念到谁，屏幕中央淡入谁的全身像（竖版）+ 金色姓名；玩家为记录员剪影。
+  // 连续两条之间先淡出 0.28s 再换图；令牌作废旧定时器，跳过/恢复时不残留。
+  _showAccuse(id) {
+    const src = id === 'player' ? 'assets/portraits/player.svg' : this.fullPortraits?.[id];
+    if (!src) { this._hideAccuse(); return; }
+    const name = id === 'player' ? '记录员' : (this.accuseNames?.[id] || '');
+    const seq = ++this._accuseSeq;
+    const apply = () => {
+      if (seq !== this._accuseSeq) return;
+      this.el.accuseImg.src = src;
+      this.el.accuseName.textContent = name;
+      this.el.accuse.classList.add('show');
+    };
+    if (this.el.accuse.classList.contains('show')) {
+      this.el.accuse.classList.remove('show');
+      setTimeout(apply, 280);
+    } else apply();
+  }
+
+  _hideAccuse() {
+    this._accuseSeq++;
+    this.el.accuse.classList.remove('show');
+  }
+
   nextStep() {
     this.step = this.stepQueue.shift();
     if (!this.step) { this.restore(); return; }
     const s = this.step;
     if (s.kind === 'intro') {
+      this._hideAccuse();
       this.camTo(3.3, F1 + 1.5, 1.0, GRAM.x, GRAM.y, GRAM.z, 1.8);
       if (this.fill) this.fill.position.set(3.3, F1 + 1.6, 1.0);
       this.say('留声机', s.text);
     } else if (s.kind === 'charge') {
+      this._showAccuse(s.targetId);
       if (s.targetId === 'player') {
         const ps = this._playerSeat;
         this.camTo(ps.x, F1 + 1.02, ps.z, GRAM.x, GRAM.y, GRAM.z, 1.4);
@@ -166,10 +202,12 @@ export class Prologue {
       }
       this.say('留声机', s.text);
     } else if (s.kind === 'outro') {
+      this._hideAccuse();
       this.camTo(3.3, F1 + 1.5, 1.0, GRAM.x, GRAM.y, GRAM.z, 1.5);
       if (this.fill) this.fill.position.set(3.3, F1 + 1.6, 1.0);
       this.say('留声机', s.text);
     } else if (s.kind === 'faint') {
+      this._hideAccuse();
       this.state = 'faint';
       const mrs = this.mgr.get('mrs_rogers');
       const rog = this.mgr.get('rogers');
@@ -199,6 +237,7 @@ export class Prologue {
     this.state = 'restore';
     this.weather.setChapter(this.weather.getChapter()); // 恢复预设灯光
     if (this.fill) { this.scene.remove(this.fill); this.fill = null; }
+    this._hideAccuse();
     this.el.bars.forEach((b) => b.classList.remove('show'));
     this.el.sub.classList.remove('show');
     // 玩家起身（显式指定大厅地面，避免落到上层楼板）
@@ -228,6 +267,7 @@ export class Prologue {
     this.el.sub.classList.remove('show');
     this.weather.setChapter(this.weather.getChapter());
     if (this.fill) { this.scene.remove(this.fill); this.fill = null; }
+    this._hideAccuse();
     if (this.player) this.player.enabled = true;
     this.state = 'done';
   }

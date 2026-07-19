@@ -31,7 +31,8 @@
       },
       "portrait": {
         "file": "assets/portraits/wargrave.jpg",
-        "promptId": "wargrave"
+        "promptId": "wargrave",
+        "full": "assets/portraits/full_wargrave.jpg"
       }
     },
     {
@@ -63,7 +64,8 @@
       },
       "portrait": {
         "file": "assets/portraits/vera.jpg",
-        "promptId": "vera"
+        "promptId": "vera",
+        "full": "assets/portraits/full_vera.jpg"
       }
     },
     {
@@ -97,7 +99,8 @@
       },
       "portrait": {
         "file": "assets/portraits/lombard.jpg",
-        "promptId": "lombard"
+        "promptId": "lombard",
+        "full": "assets/portraits/full_lombard.jpg"
       }
     },
     {
@@ -131,7 +134,8 @@
       },
       "portrait": {
         "file": "assets/portraits/armstrong.jpg",
-        "promptId": "armstrong"
+        "promptId": "armstrong",
+        "full": "assets/portraits/armstrong.jpg"
       }
     },
     {
@@ -163,7 +167,8 @@
       },
       "portrait": {
         "file": "assets/portraits/blore.jpg",
-        "promptId": "blore"
+        "promptId": "blore",
+        "full": "assets/portraits/blore.jpg"
       }
     },
     {
@@ -195,7 +200,8 @@
       },
       "portrait": {
         "file": "assets/portraits/macarthur.jpg",
-        "promptId": "macarthur"
+        "promptId": "macarthur",
+        "full": "assets/portraits/macarthur.jpg"
       }
     },
     {
@@ -228,7 +234,8 @@
       },
       "portrait": {
         "file": "assets/portraits/brent.jpg",
-        "promptId": "brent"
+        "promptId": "brent",
+        "full": "assets/portraits/brent.jpg"
       }
     },
     {
@@ -262,7 +269,8 @@
       },
       "portrait": {
         "file": "assets/portraits/rogers.jpg",
-        "promptId": "rogers"
+        "promptId": "rogers",
+        "full": "assets/portraits/rogers.jpg"
       }
     },
     {
@@ -293,7 +301,8 @@
       },
       "portrait": {
         "file": "assets/portraits/mrs_rogers.jpg",
-        "promptId": "mrs_rogers"
+        "promptId": "mrs_rogers",
+        "full": "assets/portraits/mrs_rogers.jpg"
       }
     },
     {
@@ -323,7 +332,8 @@
       },
       "portrait": {
         "file": "assets/portraits/marston.jpg",
-        "promptId": "marston"
+        "promptId": "marston",
+        "full": "assets/portraits/full_marston.jpg"
       }
     },
     {
@@ -344,7 +354,8 @@
       "modelHint": null,
       "portrait": {
         "file": "assets/portraits/player.svg",
-        "promptId": "player"
+        "promptId": "player",
+        "full": "assets/portraits/player.svg"
       }
     }
   ]
