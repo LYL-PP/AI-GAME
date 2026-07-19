@@ -108,6 +108,10 @@ export class Prologue {
     refs.sun.intensity *= 0.1;
     for (const L of refs.indoor.ceiling) L.intensity *= 0.06;
     refs.indoor.fire.intensity *= 0.5;
+    // 指控镜头正面补光（骤暗下被指控者成纯黑剪影，从机位打弱暖光使人脸可读）
+    this.fill = new THREE.PointLight(0xffe0c0, 6, 4, 1.6);
+    this.fill.position.set(3.3, F1 + 1.6, 1.0);
+    this.scene.add(this.fill);
     // 步骤队列
     const A = this.acc.accusation;
     this.stepQueue = [
@@ -133,11 +137,13 @@ export class Prologue {
     const s = this.step;
     if (s.kind === 'intro') {
       this.camTo(3.3, F1 + 1.5, 1.0, GRAM.x, GRAM.y, GRAM.z, 1.8);
+      if (this.fill) this.fill.position.set(3.3, F1 + 1.6, 1.0);
       this.say('留声机', s.text);
     } else if (s.kind === 'charge') {
       if (s.targetId === 'player') {
         const ps = this._playerSeat;
         this.camTo(ps.x, F1 + 1.02, ps.z, GRAM.x, GRAM.y, GRAM.z, 1.4);
+        if (this.fill) this.fill.position.set(ps.x, F1 + 1.2, ps.z);
       } else {
         const tgt = this.mgr.get(s.targetId);
         const hy = this._headY(tgt);
@@ -150,14 +156,18 @@ export class Prologue {
           n2?.playReaction(REACT[s.jointWith] || 'stiffen', 6);
         }
         this.camTo(
-          look.x + (TABLE.x - look.x) * 0.45, hy + 0.08, look.z + (TABLE.z - look.z) * 0.45,
-          look.x, look.y - 0.02, look.z, 1.3
+          look.x + (TABLE.x - look.x) * 0.38, hy + 0.16, look.z + (TABLE.z - look.z) * 0.38,
+          look.x, look.y - 0.04, look.z, 1.3
+        );
+        if (this.fill) this.fill.position.set(
+          look.x + (TABLE.x - look.x) * 0.38, hy + 0.24, look.z + (TABLE.z - look.z) * 0.38
         );
         tgt?.playReaction(REACT[s.targetId] || 'stiffen', 6);
       }
       this.say('留声机', s.text);
     } else if (s.kind === 'outro') {
       this.camTo(3.3, F1 + 1.5, 1.0, GRAM.x, GRAM.y, GRAM.z, 1.5);
+      if (this.fill) this.fill.position.set(3.3, F1 + 1.6, 1.0);
       this.say('留声机', s.text);
     } else if (s.kind === 'faint') {
       this.state = 'faint';
@@ -166,6 +176,7 @@ export class Prologue {
       mrs?.setAction('faint');
       const ms = seatPos(this.seatOf.mrs_rogers);
       this.camTo(ms.x + (TABLE.x - ms.x) * 0.5, this._headY(mrs) + 0.1, ms.z + (TABLE.z - ms.z) * 0.5, ms.x, F1 + 0.45, ms.z, 1.2);
+      if (this.fill) this.fill.position.set(ms.x + (TABLE.x - ms.x) * 0.5, this._headY(mrs) + 0.2, ms.z + (TABLE.z - ms.z) * 0.5);
       this.say('', '（罗杰斯太太滑下了椅子。）');
       if (rog) {
         rog.setAction('idle');
@@ -187,6 +198,7 @@ export class Prologue {
   restore() {
     this.state = 'restore';
     this.weather.setChapter(this.weather.getChapter()); // 恢复预设灯光
+    if (this.fill) { this.scene.remove(this.fill); this.fill = null; }
     this.el.bars.forEach((b) => b.classList.remove('show'));
     this.el.sub.classList.remove('show');
     // 玩家起身（显式指定大厅地面，避免落到上层楼板）
@@ -215,6 +227,7 @@ export class Prologue {
     this.el.bars.forEach((b) => b.classList.remove('show'));
     this.el.sub.classList.remove('show');
     this.weather.setChapter(this.weather.getChapter());
+    if (this.fill) { this.scene.remove(this.fill); this.fill = null; }
     if (this.player) this.player.enabled = true;
     this.state = 'done';
   }

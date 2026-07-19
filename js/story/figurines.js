@@ -32,7 +32,7 @@ export class Figurines {
     const figParts = getParts('figurine');
     let figProto = null;
     if (figParts) {
-      decimate(figParts[0].geometry, 8);   // 15k → ~1.9k（面数预算；0.22m 尺寸下不可辨）
+      decimate(figParts[0].geometry, 2);   // 15k → 7.5k（结算特写主对象，勿再减）
       figProto = buildProp(figParts, { tint: [0.96, 0.96, 1.0], castShadow: true });   // 白瓷微冷调（防炉火镀金）
       figProto.scale.setScalar(0.0082);   // 26.8 → ~0.22m 高
     }

@@ -464,8 +464,7 @@ export function buildVilla(scene, collision, data, opts = {}) {
   const chairParts = getParts('dining_chair');
   let hallChairs = null;
   if (chairParts) {
-    const cgeo = chairParts[0].geometry;
-    decimate(cgeo, 3);
+    const cgeo = chairParts[0].geometry;   // 不减面：步进减面产生破洞，近景读作"碎裂"
     const cmat = chairParts[0].material.clone();
     cmat.color.setRGB(0.42, 0.38, 0.34, THREE.SRGBColorSpace);   // 金漆压暗
     if (cmat.metalness !== undefined) cmat.metalness = 0.15;     // 哑光深木感

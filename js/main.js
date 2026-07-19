@@ -325,6 +325,8 @@ async function boot() {
   window.DialogueAPI = { start: (id) => dialogue.start(id), close: () => dialogue.close(), isOpen: () => dialogue.isOpen() };
   window.PrologueAPI = {
     state: () => prologue.state,
+    camBusy: () => !!prologue.cam,
+    camPos: () => { const c = prologue.camera.position; return { x: +c.x.toFixed(2), y: +c.y.toFixed(2), z: +c.z.toFixed(2) }; },
     gather: () => prologue.gather(),
     takeSeat: () => prologue.takeSeat(),
     skip: () => prologue.onE(),
@@ -559,9 +561,9 @@ async function boot() {
     else if (!prologue.cineActive && prologue.state !== 'take_seat') player.enabled = true;
     player.update(dt);
     npcManager.collide(player.feet, 0.35);
-    if (!figurines.active) {
+    if (!figurines.active && !prologue.cineActive) {
       camera.position.set(player.feet.x, player.feet.y + 1.62, player.feet.z);
-      if (!prologue.cineActive) camera.rotation.set(player.pitch, player.yaw, 0);
+      camera.rotation.set(player.pitch, player.yaw, 0);
     }
     // 序章完成后进入第 1 章
     if (!chapterManager.chapterStarted && prologue.state === 'done') {
