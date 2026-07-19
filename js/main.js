@@ -22,6 +22,7 @@ import { AudioEngine } from './audio/audio.js';
 import { Emptiness } from './story/emptiness.js';
 import { NavPanel } from './ui/navPanel.js';
 import { buildCastleShell } from './world/castle.js';
+import { DockCutscene } from './story/dockCutscene.js';
 
 const params = new URLSearchParams(location.search);
 
@@ -209,6 +210,14 @@ async function boot() {
     clueSpots: data.clueSpots, collision,
   });
   chapterManager.onFinale = () => endings.enterFinale();
+  // 终章码头可选过场（瓶中信 → 书房终局；E 触发/跳过，可重复）
+  const dockCS = new DockCutscene({
+    player: null, ui, audio,
+    getChapter: () => chapterManager.chapter,
+    getEndingsActive: () => endings.active,
+    data: data.endings.dockCutscene,
+  });
+  window.__dockCS = dockCS;
 
   // ---------- 章节跳转（复用现有系统函数） ----------
   function jumpToChapter(n, carryClues = true) {
@@ -385,6 +394,7 @@ async function boot() {
   figurines.player = player;
   chapterManager.player = player;
   endings.player = player;
+  dockCS.player = player;
   player.spawn(island.spawn.x, island.spawn.z, island.spawn.yaw);
   if (save.data.prologueDone && startChapter === 0) prologue.state = 'done';
   if (params.get('pos')) {
@@ -471,6 +481,7 @@ async function boot() {
       return;
     }
     const { x, y, z } = player.feet;
+    if (dockCS.tryPoi(x, z)) { currentPoi = dockCS.poiRef; nearNpc = null; return; }
     if (clues.near) {
       currentPoi = { id: 'clue_' + clues.near.clueId, nameplate: clues.near.itemDesc, sub: data.ui.controls.interact };
       ui.setPoi(currentPoi);
@@ -531,6 +542,7 @@ async function boot() {
     }
     if (e.code !== 'KeyE') return;
     if (endings.active) { endings.onE(); return; }
+    if (dockCS.playing) { dockCS.onE(); return; }
     if (dialogue.isOpen()) { dialogue.advance(); return; }
     if (prologue.wantsE()) { prologue.onE(); return; }
     if (figurines.active) { figurines.skip(); return; }
@@ -538,6 +550,7 @@ async function boot() {
     if (emptiness.onE(player.feet.x, player.feet.y, player.feet.z)) return;
     if (clues.onE()) return;
     if (nearNpc && prologue.state !== 'gather') { dialogue.start(nearNpc.id); return; }
+    if (currentPoi?.id === '__dock_view') { dockCS.play(); return; }
     if (currentPoi && !currentPoi.id?.startsWith('npc_')) {
       ui.toast(currentPoi.note || currentPoi.sub || currentPoi.nameplate);
     }
@@ -562,7 +575,7 @@ async function boot() {
   let perfLogged = false;
   renderer.setAnimationLoop(() => {
     const dt = Math.min(clock.getDelta(), 0.1);
-    if (endings.active || dialogue.isOpen() || figurines.active || notebook.isOpen() || navPanel.isOpen()) player.enabled = false;
+    if (endings.active || dialogue.isOpen() || figurines.active || notebook.isOpen() || navPanel.isOpen() || dockCS.playing) player.enabled = false;
     else if (!prologue.cineActive && prologue.state !== 'take_seat') player.enabled = true;
     player.update(dt);
     npcManager.collide(player.feet, 0.35);

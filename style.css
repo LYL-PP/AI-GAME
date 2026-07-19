@@ -151,6 +151,31 @@ html, body {
   color: #d98e4a; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
 }
 
+/* ---------- 终章码头过场（dockCutscene.js） ---------- */
+#dockCut {
+  position: fixed; inset: 0; z-index: 30; background: #000;
+  opacity: 0;
+}
+#dockCut .dc-stage { position: absolute; inset: 0; overflow: hidden; }
+#dockCut .dc-img {
+  position: absolute; left: -5%; top: -5%; width: 110%; height: 110%;
+  object-fit: cover; opacity: 0; will-change: transform, opacity;
+}
+#dockCut .dc-sub {
+  position: absolute; left: 50%; bottom: 9vh; transform: translateX(-50%);
+  width: min(760px, 86vw); text-align: center;
+}
+#dockCut .dc-line {
+  font-size: 19px; line-height: 2.1; letter-spacing: 4px; color: #d98e4a;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+  opacity: 0; transition: opacity 0.8s ease;
+}
+#dockCut .dc-line.show { opacity: 1; }
+#dockCut .dc-skip {
+  position: absolute; right: 3vw; bottom: 3.5vh;
+  font-size: 12px; letter-spacing: 3px; color: rgba(232, 221, 201, 0.45);
+}
+
 /* ---------- 对话框 ---------- */
 #dlgBox {
   position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
