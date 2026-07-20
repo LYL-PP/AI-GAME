@@ -1,7 +1,7 @@
 // figurines.js —— 壁炉台 10 瓷人士兵 + 童谣瓷牌 + 章节结算演出
 import * as THREE from '../vendor/three.module.js';
 import { GeoBatch, MAT, textPanel } from '../world/props.js';
-import { getParts, buildProp, decimate } from '../world/sceneProps.js';
+import { getParts, buildProp } from '../world/sceneProps.js';
 
 const F1 = 1.8;
 const MANTEL = { x: -5.0, y: F1 + 1.955, z: -0.5 };   // 前挑：扫描北墙面 z≈-0.92（实测）
@@ -28,19 +28,18 @@ export class Figurines {
   }
 
   build() {
-    // 瓷人士兵 ×10（figurine.glb 白瓷釉面，1/5 减面；失败回退程序化小兵）
+    // 瓷人士兵 ×10（figurine.glb 士兵雕像，11.3k 面细节保留；失败回退程序化小兵）
     const figParts = getParts('figurine');
     let figProto = null;
     if (figParts) {
-      decimate(figParts[0].geometry, 2);   // 15k → 7.5k（结算特写主对象，勿再减）
       figProto = buildProp(figParts, { tint: [0.96, 0.96, 1.0], castShadow: true });   // 白瓷微冷调（防炉火镀金）
-      figProto.scale.setScalar(0.0082);   // 26.8 → ~0.22m 高
+      figProto.scale.setScalar(0.1065);   // 新士兵雕像（实测 scale 后高 0.15 → ×1.467 → ~0.22m）
     }
     for (let i = 0; i < 10; i++) {
       let m;
       if (figProto) {
         m = figProto.clone();
-        m.position.set(MANTEL.x - 1.44 + i * 0.32, MANTEL.y - 0.077, MANTEL.z + 0.2); // 台面前沿，底面贴合
+        m.position.set(MANTEL.x - 1.44 + i * 0.32, MANTEL.y + 0.1, MANTEL.z + 0.2); // 台面前沿，底面贴合（新模 scale 修正后底 -0.10）
         m.rotation.y = Math.PI;   // 面向大厅
       } else {
         const b = new GeoBatch();
