@@ -145,6 +145,13 @@ export class DeathScenes {
   // 5 布伦特：大厅摇椅坐姿 + 窗外蜂群 + 注射器
   _brent() {
     this._corpse('brent', -5.5, F1, 6.3, 0.35, 'slump');
+    const npc = this.mgr.get('brent');
+    if (npc?.rigged && npc.rigCfg?.sit && npc.rigged.has(npc.rigCfg.sit)) {
+      // 骨骼化：坐姿 clip 低速冻结 + 微前倾成被注射瘫坐（抵消 slump 组变换下沉；毛线团保留在腿上）
+      npc.rigged.play(npc.rigCfg.sit, { timeScale: 0.1 });
+      npc.group.position.y = npc.pos.y;
+      npc.group.rotation.x = 0.18;
+    }
     const g = this._grp(5);
     const n = 26;
     const pos = new Float32Array(n * 3);

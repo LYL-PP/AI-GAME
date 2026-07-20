@@ -42,6 +42,16 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  brent: {
+    dir: 'assets/models/characters/rigged/brent/',
+    files: {
+      Walking_Woman: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Walking_Woman_withSkin.glb',
+      Idle_3: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Idle_3_withSkin.glb',
+      Chair_Sit_Idle_F: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+    },
+    idle: 'Idle_3', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_F', death: null,
+  },
   rogers: {
     dir: 'assets/models/characters/rigged/rogers/',
     files: {
@@ -291,6 +301,17 @@ export class NPC {
         prop.position.set(0.26, this.spec.h * 0.58, 0.2);
         this.group.add(prop);
         this.trayProp = prop;
+      }
+      // 针织毛线团（rigged：挂腿上近似位；坐姿 knit 播坐姿 clip，手部程序化织动不映射骨骼（舍弃））
+      if (this.spec.knit) {
+        const prop = new THREE.Mesh(mergeGeos([
+          sph(0.06, 0, 0, 0, 0xb8b4ac),
+          box(0.006, 0.2, 0.006, 0.05, 0.1, 0.02, 0x8a8578),
+          box(0.006, 0.2, 0.006, -0.05, 0.1, 0.02, 0x8a8578),
+        ]), MAT_V);
+        prop.position.set(0, this.spec.h * 0.32, 0.22);
+        this.group.add(prop);
+        this.knitProp = prop;
       }
       const label = new THREE.Sprite(new THREE.SpriteMaterial({
         map: textTexture([def.name], { w: 256, h: 80, bg: 'rgba(20,18,16,0.55)', fg: '#e8ddc9', border: 'rgba(217,142,74,0.0)', fontMain: 46 }),
