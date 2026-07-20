@@ -42,6 +42,16 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  blore: {
+    dir: 'assets/models/characters/rigged/blore/',
+    files: {
+      Walking: 'Meshy_AI_The_Victorian_Gentlem_biped_Animation_Walking_withSkin.glb',
+      Chair_Sit_Idle_M: 'Meshy_AI_The_Victorian_Gentlem_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
+      Character_output: 'Meshy_AI_The_Victorian_Gentlem_biped_Character_output.glb',
+    },
+    idle: 'Character_output', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_M', death: null,
+  },
   macarthur: {
     dir: 'assets/models/characters/rigged/macarthur/',
     files: {
