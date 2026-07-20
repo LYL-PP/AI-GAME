@@ -88,6 +88,8 @@ export class UI {
     this.el.overlay.addEventListener('click', start);
     document.addEventListener('pointerlockchange', () => {
       if (this.playMode) return;
+      // 对话/笔记本/地图等系统 UI 打开时主动释放了指针锁——不是用户 Esc 暂停，不弹覆盖层
+      if (this.uiBlocked && this.uiBlocked()) { this.el.overlay.style.display = 'none'; return; }
       const locked = document.pointerLockElement === dom;
       this.el.overlay.style.display = locked ? 'none' : 'flex';
     });

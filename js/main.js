@@ -413,6 +413,10 @@ async function boot() {
   dockCS.player = player;
   gameMap.player = player;
   player.spawn(island.spawn.x, island.spawn.z, island.spawn.yaw);
+  // 系统 UI 打开期间解锁不弹"暂停/开始"覆盖层（仅用户 Esc 才弹）
+  ui.uiBlocked = () =>
+    dialogue.isOpen() || notebook.isOpen() || navPanel.isOpen() || gameMap.isOpen() ||
+    endings.active || dockCS.playing || prologue.cineActive || figurines.active;
   if (save.data.prologueDone && startChapter === 0) prologue.state = 'done';
   if (params.get('pos')) {
     const [px, pz] = params.get('pos').split(',').map(Number);
