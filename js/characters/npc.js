@@ -42,6 +42,16 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  rogers: {
+    dir: 'assets/models/characters/rigged/rogers/',
+    files: {
+      Quick_Walk: 'Meshy_AI_Victorian_Gentleman_i_biped_Animation_Quick_Walk_withSkin.glb',
+      Chair_Sit_Idle_M: 'Meshy_AI_Victorian_Gentleman_i_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
+      Character_output: 'Meshy_AI_Victorian_Gentleman_i_biped_Character_output.glb',
+    },
+    idle: 'Character_output', idleTS: 1.0, walk: 'Quick_Walk', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_M', death: null,
+  },
   blore: {
     dir: 'assets/models/characters/rigged/blore/',
     files: {
@@ -272,6 +282,16 @@ export class NPC {
       this.armL = new THREE.Group();
       this.armR = new THREE.Group();
       rig.play(this.rigCfg.idle, { timeScale: this.rigCfg.idleTS });
+      // 侍应托盘（rigged：静态挂胸前近似位；坐姿时隐藏——坐下不端盘）
+      if (this.spec.tray) {
+        const prop = new THREE.Mesh(mergeGeos([
+          cyl(0.16, 0.16, 0.02, 0, 0, 0, 0xb8b4ac, 12),
+          cyl(0.05, 0.05, 0.06, -0.05, 0.04, 0.03, 0xe8e4da, 8),
+        ]), MAT_V);
+        prop.position.set(0.26, this.spec.h * 0.58, 0.2);
+        this.group.add(prop);
+        this.trayProp = prop;
+      }
       const label = new THREE.Sprite(new THREE.SpriteMaterial({
         map: textTexture([def.name], { w: 256, h: 80, bg: 'rgba(20,18,16,0.55)', fg: '#e8ddc9', border: 'rgba(217,142,74,0.0)', fontMain: 46 }),
         transparent: true, depthWrite: false,
@@ -355,6 +375,7 @@ export class NPC {
     this.group.rotation.z = this.lying === 'side' ? Math.PI / 2.2 : 0;
     this.group.position.y = this.pos.y - (this.seated && !rigSit ? 0.42 : 0) + (this.lying ? 0.12 : 0);
     if (this.spec.tray) this.armR.rotation.x = -1.15;
+    if (this.trayProp) this.trayProp.visible = !this.seated;   // rigged 侍应托盘：坐下不端盘
   }
 
   playReaction(type, dur = 3.2) {
