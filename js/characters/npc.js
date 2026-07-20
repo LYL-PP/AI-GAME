@@ -42,6 +42,16 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  mrs_rogers: {
+    dir: 'assets/models/characters/rigged/mrs_rogers/',
+    files: {
+      Walking_Woman: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Walking_Woman_withSkin.glb',
+      Idle_3: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Idle_3_withSkin.glb',
+      Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+    },
+    idle: 'Idle_3', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
+    sit: 'Chair_Sit_Idle_F', death: null,
+  },
   brent: {
     dir: 'assets/models/characters/rigged/brent/',
     files: {
