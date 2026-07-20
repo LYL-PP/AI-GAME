@@ -103,6 +103,13 @@ export class DeathScenes {
   _macarthur() {
     const gy = this.col.groundAt(0, -77.1, 50);
     this._corpse('macarthur', 0, gy + 0.42, -77.15, Math.PI, 'slump');
+    const npc = this.mgr.get('macarthur');
+    if (npc?.rigged && npc.rigCfg?.sit && npc.rigged.has(npc.rigCfg.sit)) {
+      // 骨骼化：Sit_on_Chair 低速循环 + 微前倾成瘫坐望海（替代组变换 slump）
+      npc.rigged.play(npc.rigCfg.sit, { timeScale: 0.12 });
+      npc.group.position.y = npc.pos.y;   // 抵消 slump 组变换下沉（clip 自带椅面高度）
+      npc.group.rotation.x = 0.14;
+    }
     const g = this._grp(3);
     const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.35, 0), new THREE.MeshLambertMaterial({ color: 0x5d2a26 }));
     rock.position.set(0.85, this.col.groundAt(0.85, -77.4, 50) + 0.15, -77.4);

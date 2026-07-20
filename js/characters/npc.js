@@ -42,6 +42,17 @@ const RIGGED_DEFS = {
     idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
     sit: 'Chair_Sit_Idle_F', death: null,
   },
+  macarthur: {
+    dir: 'assets/models/characters/rigged/macarthur/',
+    files: {
+      Walking: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Walking_withSkin.glb',
+      Idle_11: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Idle_11_withSkin.glb',
+      Sit_on_Chair_Arms_Crossed: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Sit_on_Chair_Arms_Crossed_withSkin.glb',
+    },
+    idle: 'Idle_11', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
+    sit: 'Sit_on_Chair_Arms_Crossed', death: null,
+    gaze: 'Sit_on_Chair_Arms_Crossed',   // gaze_sea 长椅坐姿（北岬角望海）
+  },
   armstrong: {
     dir: 'assets/models/characters/rigged/armstrong/',
     files: {
@@ -360,6 +371,9 @@ export class NPC {
       if (this.walking) {
         if (this.rigged.currentName !== rc.walk) this.rigged.play(rc.walk, { timeScale: rc.walkTS });
         else this.rigged.current.action.timeScale = rc.walkTS;
+      } else if (this.action === 'gaze_sea' && rc.gaze && this.rigged.has(rc.gaze)) {
+        // 望海长椅坐姿（macarthur 北岬角；低速循环）
+        if (this.rigged.currentName !== rc.gaze) this.rigged.play(rc.gaze, { timeScale: 0.5 });
       } else if (this.seated && rc.sit) {
         if (this.rigged.currentName !== rc.sit) this.rigged.play(rc.sit, { timeScale: 0.6 });
       } else if (this.rigged.currentName !== rc.idle) {
