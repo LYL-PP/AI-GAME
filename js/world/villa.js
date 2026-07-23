@@ -126,6 +126,14 @@ export function buildVilla(scene, collision, data, opts = {}) {
     wallGaps(ext, 'z', 12, -8, 8, fy, ty, EXT, gapsE, 1);     // 东
     wallGaps(ext, 'z', -12, -8, 8, fy, ty, EXT, gapsW, -1);   // 西
   }
+  // 基座裙板：外墙底（F1=1.8）与室外地坪（1.5）间 0.3 悬浮缝收边（Deco 基座，让开所有门洞）
+  {
+    const SK0 = 1.38, SK1 = 1.86, SKT = 0.5, SKY = (SK0 + SK1) / 2, SKH = SK1 - SK0;
+    for (const [a, b] of [[-12, -5.6], [-3.4, -1.0], [1.0, 3.4], [5.6, 12]]) trim.box(b - a, SKH, SKT, (a + b) / 2, SKY, 8);   // 南（正门/法式窗洞）
+    for (const [a, b] of [[-12, -0.85], [0.85, 12]]) trim.box(b - a, SKH, SKT, (a + b) / 2, SKY, -8);                        // 北（后门洞）
+    trim.box(SKT, SKH, 16, 12, SKY, 0);                       // 东
+    trim.box(SKT, SKH, 16, -12, SKY, 0);                      // 西
+  }
   // 修正：外墙洞口补上「舷窗」方洞不应贯通 —— door 类型已贯通，舷窗洞用 glass 封住即可（视觉）
 
   // ---------- 一层内墙 ----------

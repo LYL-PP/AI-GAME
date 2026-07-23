@@ -13,6 +13,29 @@ const BEACH_DIR = V2(0.65, 0.76).normalize();            // 东南海滩方向
 // 崖后石坡：台地南缘下切至潮间石台（通往崖下礁石滩的可行走坡道，绕开孤树）
 const PATH2 = [V2(-50, -38), V2(-58, -46), V2(-65, -56)];
 
+// 城堡基座垫丘裙带：沿扫描件（castle.glb）翼墙底缘折线抬升地形，掩基座悬空
+// （扫描件底是平面，岛面向海下坡 → 两翼/东北撕裂带底缘悬空 0.9~1.7m）
+// 约束：别墅垫平区/内院/小径/柴棚/ch4 死亡点均在线 5.5m 衰减之外，实测 0 影响
+const BERM_H = 2.95;   // 裙带台面高（扫描底缘 ~2.6-3.2，配合整体下沉 0.35 后微嵌）
+const BERM_LINES = [
+  [[-21, -17], [-22.5, -8], [-24.5, 0], [-26, 4], [-23.5, 9]],    // 西翼墙（前段内弯贴墙）
+  [[24.5, -24], [24.5, -18], [24, -12], [24, -8], [25, 0], [27, 4], [26, 9], [23, 12], [21.5, 11.5]],   // 东翼墙（贴底缘折行）
+];
+function bermDist(x, z) {
+  let best = Infinity;
+  for (const line of BERM_LINES) {
+    for (let i = 0; i < line.length - 1; i++) {
+      const [ax, az] = line[i], [bx, bz] = line[i + 1];
+      const abx = bx - ax, abz = bz - az;
+      const l2 = abx * abx + abz * abz;
+      const t = Math.max(0, Math.min(1, ((x - ax) * abx + (z - az) * abz) / l2));
+      const d = Math.hypot(x - (ax + abx * t), z - (az + abz * t));
+      if (d < best) best = d;
+    }
+  }
+  return best;
+}
+
 function smoothstep(a, b, x) {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -81,6 +104,9 @@ export function groundHeight(x, z) {
   const dz = Math.max(VILLA_PAD.z1 - z, 0, z - VILLA_PAD.z2);
   const dpv = Math.hypot(dx, dz);
   h = h * smoothstep(1.5, 5, dpv) + 1.5 * (1 - smoothstep(1.5, 5, dpv));
+  // 城堡基座垫丘（最后叠加：贴扫描翼墙底缘；小径/海滩已被折线选区避开）
+  const bm = smoothstep(5.5, 1.5, bermDist(x, z));
+  if (bm > 0) h = h * (1 - bm) + Math.max(h, BERM_H) * bm;
   return h;
 }
 
@@ -378,6 +404,35 @@ export function buildIsland(scene, collision, data) {
         im.setMatrixAt(k, dd.matrix);
       }
       im.count = 8;
+      group.add(im);
+    }
+  }
+
+  // ---------- 西翼前角岩裙（rock3 深色实例 ×3，掩西翼墙前段残余底缝；柴棚 5m 外不受影响） ----------
+  {
+    const parts = getParts('rock3');
+    if (parts) {
+      const geo = parts[0].geometry.clone();
+      decimate(geo, 6);
+      const mat = parts[0].material.clone();
+      if (mat.color) mat.color.setRGB(0.42, 0.44, 0.48, THREE.SRGBColorSpace);   // 深色近扫描件压暗调
+      const spots = [
+        [-24.6, 7.6, 1.0], [-23.3, 9.2, 1.2], [-25.8, 8.8, 0.85],
+      ];
+      const im = new THREE.InstancedMesh(geo, mat, spots.length);
+      im.castShadow = true; im.receiveShadow = true;
+      const dd = new THREE.Object3D();
+      let rs2 = 31;
+      const rnd2 = () => { rs2 = (rs2 * 16807) % 2147483647; return rs2 / 2147483647; };
+      spots.forEach(([x, z, s], i) => {
+        const gy = groundHeight(x, z);
+        dd.position.set(x, gy - 0.22, z);
+        dd.rotation.set(0, rnd2() * Math.PI * 2, 0);
+        dd.scale.set(s, s * (0.75 + rnd2() * 0.3), s);
+        dd.updateMatrix();
+        im.setMatrixAt(i, dd.matrix);
+        collision.addBox(x - 0.55 * s, gy - 0.3, z - 0.55 * s, x + 0.55 * s, gy + 2.5, z + 0.55 * s);
+      });
       group.add(im);
     }
   }
