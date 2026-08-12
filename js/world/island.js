@@ -378,6 +378,7 @@ export function buildIsland(scene, collision, data) {
       const x = (rnd() * 2 - 1) * 55, z = rnd() * 65 - 35;
       if (Math.abs(x) < 6.5) continue;                                   // 中轴走廊留空
       if (x > -18 && x < 18 && z > -14 && z < 20) continue;              // 别墅地基区
+      if (x > 16 && x < 30 && z > -6 && z < 14) continue;                // 东南前角敏感视区（正对门面，亮岩读作白色碎刺）留空
       if (pathInfo(x, z).d < 3.2) continue;                              // 不压小径
       if (Math.hypot(x - 44, z - 50) < 7) continue;                      // 海滩现场
       if (Math.hypot(x - trX, z - trZ) < 9) continue;                    // 孤树保护区
@@ -435,6 +436,36 @@ export function buildIsland(scene, collision, data) {
       });
       group.add(im);
     }
+  }
+
+  // ---------- 城堡石裙基座（遮 castle_clean y<4 底部切片带：沿两翼外墙线深色石裙，地形→4.2m；城门/内院保护带不设） ----------
+  {
+    const SK_TOP = 4.2, SK_TH = 1.15;
+    const lines = [
+      [[22, 13.5], [21.5, 11.5], [23, 12], [26, 9], [27, 4], [25, 0], [24, -8], [24, -12], [24.5, -18], [24.5, -20]],   // 东翼外墙线
+      [[-22, 13.5], [-23.5, 9], [-26, 4], [-24.5, 0], [-22.5, -8], [-21, -17], [-20, -21]],                              // 西翼外墙线
+    ];
+    const sb = new GeoBatch();
+    for (const line of lines) {
+      for (let i = 0; i < line.length - 1; i++) {
+        const [ax, az] = line[i], [bx, bz] = line[i + 1];
+        const len = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(len / 1.1));
+        const ry = Math.atan2(-(bz - az), bx - ax);
+        let mnx = Math.min(ax, bx) - 0.7, mxx = Math.max(ax, bx) + 0.7;
+        let mnz = Math.min(az, bz) - 0.7, mxz = Math.max(az, bz) + 0.7;
+        let gyMin = Infinity;
+        for (let j = 0; j < n; j++) {
+          const tm = (j + 0.5) / n;
+          const mx = ax + (bx - ax) * tm, mz = az + (bz - az) * tm;
+          const gy = groundHeight(mx, mz);
+          gyMin = Math.min(gyMin, gy);
+          const y0 = gy - 0.35;
+          sb.box(len / n + 0.3, SK_TOP - y0, SK_TH, mx, (y0 + SK_TOP) / 2, mz, ry);
+        }
+        collision.addBox(mnx, gyMin - 0.35, mnz, mxx, SK_TOP, mxz);   // 石裙占位（前滩可绕行区，防穿模）
+      }
+    }
+    group.add(sb.mesh(MAT.trim, { cast: true }));
   }
 
   // ---------- 高空云 ×2（weather 联动调色/隐藏/高度；update 缓慢漂移） ----------

@@ -25,7 +25,10 @@ async function main() {
         if (a.preview?.properties) return '[' + a.preview.properties.map((p) => p.value).join(',') + ']';
         return a.description ?? '';
       }).join(' ');
-      if (/scanCastle|castle|CUT|cut/i.test(text)) console.log('[console]', text);
+      console.log('[console]', m.params.type, text.slice(0, 400));
+    }
+    if (m.method === 'Runtime.exceptionThrown') {
+      console.log('[EXC]', JSON.stringify(m.params.exceptionDetails).slice(0, 600));
     }
   };
   await new Promise((r) => { ws.onopen = r; });

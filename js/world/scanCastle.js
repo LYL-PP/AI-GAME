@@ -7,7 +7,8 @@ import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
 
 const MODE = 'whole';
-const URL = 'assets/models/scene/castle.glb';
+const URL = 'assets/models/scene/castle_clean.glb';     // 系统性清理版（tools/castle_clean.py 烘制：连通域悬空碎块+底部切片+碎石簇）
+const URL_RAW = 'assets/models/scene/castle.glb';       // 原件回退
 const KEEP_MESHES = new Set([6, 7]); // 建筑主体（主堡+塔楼+门楼）；其余为树/地面扫描噪声
 
 // ---------- whole：2.0 倍内院对齐（历史 v3 参数；门脸 z≈13、门中轴对 x=0） ----------
@@ -15,22 +16,12 @@ const S = 2.0;
 const RY = -Math.PI / 2;                          // 门楼（raw +x 面）→ +Z 码头方向
 const POS = { x: 3.0, y: -2.55, z: -3.0 };   // y: -2.2 → -2.55 整体下沉 0.35（基座贴合地形，配合 island.js 垫丘裙带）
 // 塔基切除：门楼塔基插入三层书房东墙（v3 唯一遗留问题）——w1 各内部机位复查未见复现，留空备用。
-// 启用框组（raw 坐标，三角心判定）：
-//   [0] 悬顶碎渣云（raw y>26 ≈ 游戏 y>50，直方图实证塔楼本体 y<50、其上纯碎渣）
-//   [1] 东北撕裂带：游戏 x[12,34] y[-2,49] z[-53,-20.5]（用户红框：右侧撕裂底边+悬冠；全区无底缘站立结构，全高切除）
-//   [2] 东北内角浮块：游戏 x[17.3,23] y[4.2,9] z[-26,-13.5]
-//   [3] 北侧浮块 (3,-35)：游戏 x[1,6] y[3,9] z[-37,-33]
-//   [4] 北缘浮块 (-16,-51)：游戏 x[-18,-14] y[2,9] z[-53,-48]
-//   [5] 东北内角浮块列：游戏 x[17,19.5] y[4,9] z[-28,-3]（[2] 框 z/x 边界外逃逸列）
-//   [6] 北后废墟浮块：游戏 x[10,17.5] y[4.5,20] z[-30,-14]（无底缘；z1 保北面墙 z≈-13.5）
+// 当前启用（raw 坐标，三角心判定）：
+//   [0] 悬顶碎渣云（raw y>26 ≈ 游戏 y>50，直方图实证塔楼本体 y<50、其上纯碎渣；
+//       castle_clean 连通域已删独立浮渣，此框兜底与塔相连的碎渣）
+//   ※ 2026-07 系统性清理后，地面悬空碎块/撕裂带/底部破碎带已由 castle_clean.glb 离线清除，不再用运行期 CUT 框。
 const CUTS = [
   { x0: -70, x1: 40, y0: 26, y1: 40, z0: -40, z1: 75 },
-  { x0: -25, x1: -8.75, y0: 0.28, y1: 25.7, z0: -15.5, z1: -4.5 },
-  { x0: -11.5, x1: -5.25, y0: 3.38, y1: 5.78, z0: -10, z1: -7.15 },
-  { x0: -17, x1: -15, y0: 2.78, y1: 5.78, z0: -1.5, z1: 1 },
-  { x0: -25, x1: -22.5, y0: 2.28, y1: 5.78, z0: 8.5, z1: 10.5 },
-  { x0: -12.5, x1: 0, y0: 3.28, y1: 5.78, z0: -8.25, z1: -7 },
-  { x0: -13.5, x1: -5.5, y0: 3.53, y1: 11.28, z0: -7.25, z1: -3.5 },
 ];
 
 // ---------- graft：立面移植参数（回退保留） ----------
@@ -63,8 +54,8 @@ function mergeGeos(list) {
 }
 
 async function loadCastle() {
-  const gltf = await new GLTFLoader().loadAsync(URL);
-  return gltf;
+  try { return await new GLTFLoader().loadAsync(URL); }
+  catch { return await new GLTFLoader().loadAsync(URL_RAW); }
 }
 
 // ================= whole：整体 castle.glb =================
@@ -164,6 +155,19 @@ async function buildWhole(scene, collision) {
     group.add(L);
   }
   group.add(new THREE.Mesh(mergeGeos(lanternB), new THREE.MeshBasicMaterial({ color: 0xffb35c })));
+
+  // ---------- 东南前墙残段背衬板（残段三角洞透天，正面读作亮白尖刺；内院侧衬深色板挡天光，西侧留 2m 通道） ----------
+  {
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(10, 8.8, 0.3),
+      new THREE.MeshLambertMaterial({ color: 0x4b525b })
+    );
+    back.position.set(19, 7.8, 9.5);
+    back.castShadow = true;
+    back.receiveShadow = true;
+    group.add(back);
+    collision.addBox(14, 3.4, 9.2, 24, 12.2, 9.8);
+  }
 
   // ---------- 内院外墙碰撞（视觉翼墙近似圈；城门洞可通行，北面西半开放通悬崖动线） ----------
   {
