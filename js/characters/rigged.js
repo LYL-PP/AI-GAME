@@ -2,6 +2,7 @@
 // 每个 GLB 自带 skin 与 clip（各文件独立骨架），切换 clip = 切换整模型（权重+透明度淡入淡出）
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { LoadTracker, loadGLB } from '../loadProgress.js';
 
 // 按位置聚合的平滑法线（Meshy 低模常每面独立顶点=硬折面"布袋折痕"；
 // 只平均法线、不合并顶点，蒙皮权重/UV 缝不受影响，变形由蒙皮 shader 照常变换）
@@ -26,17 +27,28 @@ function smoothNormalsByPosition(geo) {
 }
 
 export class RiggedActor {
-  // files: { name: fileName }；tint：剪影材质色（黑袍 #1a1a20 系）
-  static async load(dir, files, { tint = 0x1a1a20 } = {}) {
-    const loader = new GLTFLoader();
+  // files: { name: fileName }；tint：剪影材质色（黑袍 #1a1a20 系）；trackKey：加载页进度跟踪键（整角色聚合）
+  static async load(dir, files, { tint = 0x1a1a20, trackKey = null } = {}) {
     const a = new RiggedActor();
     a.group = new THREE.Group();
     a.items = {};
     a.current = null;
     a.currentName = null;
     a.faceOffset = 0;
+    // 角色级聚合进度：各文件并行，loaded 按文件累计
+    const prog = {};
+    const bump = () => {
+      if (!trackKey) return;
+      let s = 0;
+      for (const k in prog) s += prog[k];
+      LoadTracker.progress(trackKey, s, 0);
+    };
     await Promise.all(Object.entries(files).map(async ([name, file]) => {
-      const g = await loader.loadAsync(dir + file);
+      prog[name] = 0;
+      const g = await loadGLB(dir + file, null, trackKey ? (loaded, total) => {
+        prog[name] = Math.max(prog[name] || 0, total || loaded);
+        bump();
+      } : null);
       const root = g.scene;
       const mat = new THREE.MeshLambertMaterial({ color: tint, emissive: 0x111116, transparent: true, opacity: 0 });
       root.traverse((o) => {

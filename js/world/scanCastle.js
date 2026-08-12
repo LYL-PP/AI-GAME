@@ -5,6 +5,7 @@
 //   'off'   纯 Kenney 外壳
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { LoadTracker, loadGLB } from '../loadProgress.js';
 
 const MODE = 'whole';
 const URL = 'assets/models/scene/castle_clean.glb';     // 系统性清理版（tools/castle_clean.py 烘制：连通域悬空碎块+底部切片+碎石簇）
@@ -53,15 +54,16 @@ function mergeGeos(list) {
   return out;
 }
 
-async function loadCastle() {
-  try { return await new GLTFLoader().loadAsync(URL); }
-  catch { return await new GLTFLoader().loadAsync(URL_RAW); }
+async function loadCastle(meta = null) {
+  if (meta) LoadTracker.register('castle', meta.label, meta.est || 0);
+  try { return await loadGLB(URL, meta ? 'castle' : null); }
+  catch { return await loadGLB(URL_RAW, meta ? 'castle' : null); }
 }
 
 // ================= whole：整体 castle.glb =================
-async function buildWhole(scene, collision) {
+async function buildWhole(scene, collision, meta) {
   let gltf;
-  try { gltf = await loadCastle(); } catch (e) {
+  try { gltf = await loadCastle(meta); } catch (e) {
     console.warn('[scanCastle] 加载失败，回退 Kenney 外壳：', e);
     return null;
   }
@@ -279,8 +281,8 @@ async function buildGraft(scene, collision) {
   return { group, windowGlow: { mats: [glowMat, glowPtsMat], lights: lanternLights } };
 }
 
-export async function buildScanCastle(scene, collision) {
+export async function buildScanCastle(scene, collision, meta = null) {
   if (MODE === 'off') return null;
   if (MODE === 'graft') return buildGraft(scene, collision);
-  return buildWhole(scene, collision);
+  return buildWhole(scene, collision, meta);
 }

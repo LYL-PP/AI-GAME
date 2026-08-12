@@ -140,9 +140,10 @@ async function main() {
   await send('Network.setCacheDisabled', { cacheDisabled: true });
   await send('Runtime.enable');
   await send('Page.navigate', { url: URL_GAME });
-  await sleep(12000);
-  const ready = await evaljs('!!window.DebugAPI');
-  if (!ready) { console.log('FAIL: DebugAPI not ready'); chrome.kill(); process.exit(1); }
+  // 分阶段加载：__ready 在阶段 B（全系统）完成后置位
+  let ready = false;
+  for (let i = 0; i < 240 && !ready; i++) { await sleep(1000); ready = await evaljs('!!window.__ready'); }
+  if (!ready) { console.log('FAIL: __ready timeout'); chrome.kill(); process.exit(1); }
   const res = JSON.parse(await evaljs(TEST));
   let pass = 0;
   for (const r of res) {

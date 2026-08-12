@@ -47,7 +47,32 @@
       "ngPlus": "二周目已解锁：凶手视角批注"
     },
     "system": {
-      "loading": "潮水正在涨起……",
+      "loading": {
+        "stageA": "铺设岛屿与城堡……",
+        "stageB": "整理别墅与宾客……",
+        "stageC": "布置终局之物……",
+        "gateWait": "整理室内……",
+        "items": {
+          "jetty": "木栈桥",
+          "boat": "泊船",
+          "rock1": "礁石",
+          "rock2": "岸礁",
+          "rock3": "巨岩",
+          "tree": "树木",
+          "cloud": "层云",
+          "grass": "草丛",
+          "castle": "城堡外壳",
+          "hall": "大厅",
+          "gramophone": "留声机",
+          "figurine": "瓷人士兵",
+          "dining_table": "餐桌",
+          "dining_chair": "餐椅",
+          "candelabra": "烛台",
+          "chandelier": "吊灯",
+          "rug": "地毯",
+          "sofa": "沙发"
+        }
+      },
       "saved": "已自动存档",
       "gameTitle": "无人生还：士兵岛",
       "gameTitleMain": "无人生还",

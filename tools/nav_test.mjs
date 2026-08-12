@@ -42,7 +42,8 @@ async function main() {
   await send('Page.enable'); await send('Runtime.enable');
   await send('Network.enable'); await send('Network.setCacheDisabled', { cacheDisabled: true });
   await send('Page.navigate', { url: 'http://localhost:8000/?chapter=0&play=1&fresh=1' });
-  await sleep(12000);
+  // 分阶段加载：__ready 在阶段 B（全系统）完成后置位
+  for (let i = 0; i < 240; i++) { await sleep(1000); if (await evaljs('!!window.__ready')) break; }
 
   // 面板打开截图
   await evaljs('NavAPI.open()');
@@ -107,7 +108,7 @@ async function main() {
 
   // ④ 携带线索 jump(8)：11 条线索
   await send('Page.navigate', { url: 'http://localhost:8000/?chapter=0&play=1&fresh=1' });
-  await sleep(12000);
+  for (let i = 0; i < 240; i++) { await sleep(1000); if (await evaljs('!!window.__ready')) break; }
   await evaljs('NavAPI.setCarry(true)');
   await evaljs('StoryAPI.jumpToChapter(8, true)');
   await sleep(1200);
@@ -116,7 +117,7 @@ async function main() {
 
   // ⑤ jump(0)：清存档整页重开（play 模式下验证状态重置）
   await evaljs('StoryAPI.jumpToChapter(0)');
-  await sleep(9000);
+  for (let i = 0; i < 240; i++) { await sleep(1000); if (await evaljs('!!window.__ready')) break; }
   const t5 = JSON.parse(await evaljs(`JSON.stringify({
     reloaded: !!window.StoryAPI,
     chapter: SaveAPI.data().chapter,

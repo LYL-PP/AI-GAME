@@ -4,6 +4,7 @@
 // 加载失败时 preload 返回 false，villa 按原样构建（程序化大厅兜底）。
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { LoadTracker, loadGLB } from '../loadProgress.js';
 
 const URL = 'assets/models/scene/hall.glb';
 const SCALE = { x: 0.86, y: 0.70, z: 1.19 };
@@ -11,12 +12,14 @@ const POS = { x: -10.35, y: 2.7, z: 2.55 }; // 对齐后截图校准
 
 let _gltf = null;
 
-export async function preloadHallScan() {
+export async function preloadHallScan(meta = null) {
   try {
-    _gltf = await new GLTFLoader().loadAsync(URL);
+    if (meta) LoadTracker.register('hall', meta.label, meta.est || 0);
+    _gltf = await loadGLB(URL, meta ? 'hall' : null);
     return true;
   } catch (e) {
     console.warn('[hallScan] 加载失败，保留程序化大厅：', e);
+    if (meta) LoadTracker.done('hall');
     _gltf = null;
     return false;
   }

@@ -51,9 +51,11 @@ async function main() {
   // fresh=1 清存档重来
   await send('Page.navigate', { url: 'http://localhost:8000/?chapter=0&play=1&fresh=1' });
   await sleep(3000);
+  // 分阶段加载：__ready 在阶段 B（全系统）完成后置位
+  for (let i = 0; i < 240; i++) { await sleep(1000); if (await evaljs('!!window.__ready')) break; }
   await evaljs('SaveAPI.clear()');
   await send('Page.navigate', { url: 'http://localhost:8000/?chapter=0&play=1&fresh=1' });
-  await sleep(12000);
+  for (let i = 0; i < 240; i++) { await sleep(1000); if (await evaljs('!!window.__ready')) break; }
 
   check('序章待命(idle)', (await evaljs('PrologueAPI.state()')) === 'idle');
   // 跳过序章直接进第 1 章（序章已由 story_test 验收）

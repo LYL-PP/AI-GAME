@@ -12,6 +12,33 @@ const T1 = 4.75, T2 = 7.95, T3 = 11.15;      // 各层墙顶标高
 const ROOF = 11.45;
 const EXT = 0.35, INT = 0.2;                 // 外墙/内墙厚度
 
+// 阶段 A 极简外壳：分阶段加载期间（B 未载完）保持码头/前滩构图完整；
+// 灰泥体块 + 屋顶挑檐 + 南面暖窗/门洞暖光，仅外观无碰撞（门口拦截由 main.js gateVilla 负责），B 建成后移除
+export function buildVillaShell(scene) {
+  const g = new THREE.Group();
+  g.name = 'villaShell';
+  const body = new GeoBatch();
+  body.box(24.6, 11.3 - 1.5, 16.6, 0, (1.5 + 11.3) / 2, 0);      // 主体（地坪 1.5 → 檐口 11.3，落地无悬浮）
+  body.box(25.2, 0.32, 17.2, 0, 11.45, 0);                        // 屋顶挑檐
+  g.add(body.mesh(MAT.plaster, { cast: true }));
+  const glow = new GeoBatch();
+  for (const cx of [-6, -2, 2, 6]) {
+    for (const fy of [5.0, 8.2]) {
+      const w = new THREE.PlaneGeometry(1.25, 1.4);
+      w.translate(cx, fy + 1.65, 8.32);                            // 南面 F2/F3 暖窗
+      glow.add(w);
+    }
+  }
+  const door = new THREE.PlaneGeometry(1.7, 2.3);
+  door.translate(0, 1.8 + 1.15, 8.33);                             // 正门暖光
+  glow.add(door);
+  const gm = glow.mesh(new THREE.MeshBasicMaterial({ color: 0xd98e4a, transparent: true, opacity: 0.5 }));
+  gm.renderOrder = 1;
+  g.add(gm);
+  scene.add(g);
+  return g;
+}
+
 export function buildVilla(scene, collision, data, opts = {}) {
   const g = new THREE.Group();
   scene.add(g);

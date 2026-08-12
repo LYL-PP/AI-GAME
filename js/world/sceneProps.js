@@ -3,6 +3,7 @@
 // 取不到（null）时回退现有程序化占位。
 import * as THREE from '../vendor/three.module.js';
 import { GLTFLoader } from '../vendor/GLTFLoader.js';
+import { LoadTracker, loadGLB } from '../loadProgress.js';
 
 const _parts = new Map();   // name → [{geometry, material}] | null
 
@@ -101,16 +102,19 @@ export function cutGeometryBox(geometry, box) {
   return geometry;
 }
 
-export async function preloadSceneProps(defs) {
-  const loader = new GLTFLoader();
+// meta[name] = { label, est }：加载页进度注册用（可选）
+export async function preloadSceneProps(defs, meta = {}) {
   await Promise.all(Object.entries(defs).map(async ([name, def]) => {
     const url = typeof def === 'string' ? def : def.url;
     const filter = typeof def === 'object' ? def.filter : null;
+    const m = meta[name];
+    if (m) LoadTracker.register(name, m.label, m.est || 0);
     try {
-      const g = await loader.loadAsync(url);
+      const g = await loadGLB(url, m ? name : null);
       _parts.set(name, bakeParts(g.scene, filter));
     } catch (e) {
       console.warn(`[sceneProps] ${name} 加载失败，回退占位：`, e);
+      if (m) LoadTracker.done(name);
       _parts.set(name, null);
     }
   }));

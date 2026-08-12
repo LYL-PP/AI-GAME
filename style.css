@@ -357,6 +357,25 @@ html, body {
   color: rgba(216, 201, 163, 0.75); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
   animation: titlePulse 1.6s ease-in-out infinite;
 }
+/* ---------- 分阶段加载页（标题同款） ---------- */
+#loadScreen {
+  position: fixed; inset: 0; z-index: 29; display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 30%, #10151a 0%, #05070a 70%);
+  font-family: "Noto Serif SC", "SimSun", serif;
+}
+#loadScreen .load-title { color: #e8dcc0; font-size: 30px; letter-spacing: 0.5em; text-indent: 0.5em; margin: 0 0 10px; text-shadow: 0 0 24px rgba(255, 180, 80, .3), 0 2px 8px #000; }
+#loadScreen .load-stage { color: #9a8f78; font-size: 14px; letter-spacing: 0.45em; text-indent: 0.45em; margin: 0 0 34px; }
+#loadScreen .load-barwrap { width: min(46vw, 520px); height: 3px; background: rgba(216, 201, 163, 0.16); border-radius: 2px; overflow: hidden; }
+#loadScreen .load-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #8a7a55, #e8c37e); box-shadow: 0 0 12px rgba(255, 190, 90, .55); transition: width .25s ease; }
+#loadScreen .load-pct { color: #d8c9a3; font-size: 15px; letter-spacing: 0.3em; text-indent: 0.3em; margin: 14px 0 8px; }
+#loadScreen .load-item { color: rgba(216, 201, 163, 0.55); font-size: 12px; letter-spacing: 0.25em; text-indent: 0.25em; margin: 0; min-height: 1.2em; }
+/* 门口等待提示（阶段 B 未完时） */
+#gateWait {
+  position: fixed; left: 50%; bottom: 18vh; transform: translateX(-50%); z-index: 18; display: none;
+  color: #d8c9a3; background: rgba(10, 12, 14, 0.78); border: 1px solid rgba(138, 122, 85, 0.55);
+  padding: 10px 26px; font-family: "Noto Serif SC", serif; font-size: 14px; letter-spacing: 0.25em; text-indent: 0.25em;
+}
 @keyframes titlePulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 @keyframes titleFadein { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; } }
 

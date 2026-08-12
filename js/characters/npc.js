@@ -4,6 +4,13 @@ import { GLTFLoader } from '../vendor/GLTFLoader.js';
 import { lam, textTexture } from '../world/props.js';
 import { KenneyLib } from './kenney.js';
 import { RiggedActor } from './rigged.js';
+import { LoadTracker } from '../loadProgress.js';
+
+// 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-07 实测实际加载文件和）
+const RIGGED_EST_MB = {
+  wargrave: 2.4, marston: 1.3, vera: 1.1, mrs_rogers: 1.3, brent: 0.7,
+  rogers: 0.6, blore: 0.6, macarthur: 0.5, armstrong: 1.3, lombard: 1.1,
+};
 
 // 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
 const RIGGED_DEFS = {
@@ -622,17 +629,22 @@ export class NPC {
 }
 
 export class NPCManager {
-  static async create(scene, characters) {
+  static async create(scene, characters, track = false) {
     const kids = characters.map((c) => c.modelHint?.kenney).filter(Boolean);
     const lib = await KenneyLib.load(kids);
     // 骨骼动画角色（立绘平面投影贴图；夜奔段另有黑化剪影实例，互不影响）
     lib.rigged = {};
+    const nameOf = {};
+    for (const c of characters) nameOf[c.id] = c.name;
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
+      const key = 'npc_' + id;
+      if (track) LoadTracker.register(key, `宾客·${nameOf[id] || id}`, (RIGGED_EST_MB[id] || 8) * 1048576);
       try {
-        lib.rigged[id] = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20 });
+        lib.rigged[id] = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20, trackKey: track ? key : null });
       } catch (e) {
         console.warn(`[rigged ${id}] 日常骨骼加载失败，退回 kenney 模型`, e);
       }
+      if (track) LoadTracker.done(key);
     }
     // 沃格雷夫无原生坐姿 clip：借隆巴德同骨架 Chair_Sit_Idle_M 重定向
     // （两者 26/26 节点、24/24 动画轨道同名，clip 可直接按名绑定）
