@@ -16,13 +16,16 @@ const RIGGED_EST_MB = {
 const RIGGED_DEFS = {
   wargrave: {
     dir: 'assets/models/characters/rigged/wargrave/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Magistrate 法官，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
-      running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
-      injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',
-      dying: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_dying_backwards_withSkin.glb',
+      body: 'Magistrate_body.glb',          // 真贴图供体（clip0 静态；兼坐姿借用宿主）
+      walking: 'Magistrate_walk.glb',
+      dozing: 'Magistrate_idle_dozing.glb',
+      talk: 'Magistrate_idle_talk.glb',
+      running: 'Magistrate_run.glb',
+      dying: 'Magistrate_dying.glb',
     },
-    idle: 'walking', idleTS: 0.12, walk: 'walking', walkTS: 1.0, sit: 'Chair_Sit_Idle_M', death: 'dying',
+    idle: 'dozing', idleTS: 1.0, walk: 'walking', walkTS: 1.0, sit: 'Chair_Sit_Idle_M', death: 'dying',
   },
   marston: {
     dir: 'assets/models/characters/rigged/marston/',
@@ -640,20 +643,21 @@ export class NPCManager {
       const key = 'npc_' + id;
       if (track) LoadTracker.register(key, `宾客·${nameOf[id] || id}`, (RIGGED_EST_MB[id] || 8) * 1048576);
       try {
-        lib.rigged[id] = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20, trackKey: track ? key : null });
+        lib.rigged[id] = await RiggedActor.load(def.dir, def.files, { tint: 0x1a1a20, trackKey: track ? key : null, trueTexture: !!def.trueTexture });
       } catch (e) {
         console.warn(`[rigged ${id}] 日常骨骼加载失败，退回 kenney 模型`, e);
       }
       if (track) LoadTracker.done(key);
     }
     // 沃格雷夫无原生坐姿 clip：借隆巴德同骨架 Chair_Sit_Idle_M 重定向
-    // （两者 26/26 节点、24/24 动画轨道同名，clip 可直接按名绑定）
+    // （两者 26/26 节点、24/24 动画轨道同名，clip 可直接按名绑定；真贴图版以 body 为宿主、供体材质克隆）
     try {
       const wg = lib.rigged.wargrave, lm = lib.rigged.lombard;
       const clip = lm?.items.Chair_Sit_Idle_M?.action?.getClip();
       if (wg && clip && !wg.has('Chair_Sit_Idle_M')) {
-        const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.wargrave.dir + RIGGED_DEFS.wargrave.files.walking);
-        wg.addClipModel('Chair_Sit_Idle_M', g.scene, clip);
+        const wdef = RIGGED_DEFS.wargrave;
+        const g = await new GLTFLoader().loadAsync(wdef.dir + (wdef.trueTexture ? wdef.files.body : wdef.files.walking));
+        wg.addClipModel('Chair_Sit_Idle_M', g.scene, clip, { mat: wg.donorMat || null });
       }
     } catch (e) { console.warn('[rigged wargrave] 借用坐姿失败，维持站姿下沉', e); }
     // ch9 海滩对峙借用（同骨架）：隆巴德←维拉受击反应；维拉←隆巴德持枪戒备
@@ -672,10 +676,15 @@ export class NPCManager {
         }
       }
     } catch (e) { console.warn('[rigged] ch9 对峙借用失败', e); }
-    // 统一立绘投影材质（含借用模型）
+    // 统一立绘投影材质（含借用模型；真贴图角色跳过——模型自带材质）
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
       const rig = lib.rigged[id];
       if (!rig) continue;
+      if (def.trueTexture) {
+        rig.group.visible = false;
+        scene.add(rig.group);
+        continue;
+      }
       const tex = new THREE.TextureLoader().load(def.dir + 'tex_fullbody.jpg');
       tex.flipY = false;
       tex.colorSpace = THREE.SRGBColorSpace;

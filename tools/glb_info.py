@@ -1,23 +1,18 @@
-import json, struct, glob
-
-def probe(p):
-    with open(p, 'rb') as f:
-        magic, ver, ln = struct.unpack('<III', f.read(12))
+import json, struct, sys
+def glb_info(path):
+    with open(path, 'rb') as f:
+        magic, ver, total = struct.unpack('<III', f.read(12))
         clen, ctype = struct.unpack('<II', f.read(8))
-        j = json.loads(f.read(clen))
-    anims = [a.get('name', '?') for a in j.get('animations', [])]
-    skins = len(j.get('skins', []))
-    bones = len(j['skins'][0]['joints']) if skins else 0
-    imgs = len(j.get('images', []))
-    tris = 0
-    for m in j.get('meshes', []):
-        for prim in m.get('primitives', []):
-            if 'indices' in prim:
-                tris += j['accessors'][prim['indices']]['count'] // 3
-    print(p.replace('\\', '/').split('/')[-1])
-    print('  tris:', tris, '| anims:', anims, '| skins:', skins, '| bones:', bones, '| images:', imgs)
-
-base = '游戏制作素材/人物3D/沃格雷夫法官/'
-probe(base + 'Meshy_AI_Portrait_of_a_Judge_0718084613_generate.glb')
-for f in sorted(glob.glob(base + 'Meshy_AI_Portrait_of_a_Judge_biped/*/*.glb')):
-    probe(f)
+        doc = json.loads(f.read(clen))
+    imgs = doc.get('images', [])
+    name = path.replace('\\', '/').split('/')[-1]
+    total_img = 0
+    for i in imgs:
+        bv = doc['bufferViews'][i['bufferView']]
+        total_img += bv['byteLength']
+    anims = [a.get('name', '') for a in doc.get('animations', [])]
+    print(name)
+    print('  images:', len(imgs), [i.get('mimeType') for i in imgs], 'bytes:', round(total_img / 1048576, 1), 'MB')
+    print('  anims:', anims, '| skins:', len(doc.get('skins', [])), '| meshes:', len(doc.get('meshes', [])))
+for p in sys.argv[1:]:
+    glb_info(p)

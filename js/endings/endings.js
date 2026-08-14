@@ -51,7 +51,7 @@ export class EndingSystem {
     };
     this._typing = null;
     // 法官骨骼动画（踉跄走入黑夜段；dying_backwards 备用清单在册）
-    this._judgeReady = RiggedActor.load('assets/models/characters/rigged/wargrave/', {
+    this._judgeReady = RiggedActor.load('assets/models/characters/rigged/wargrave/legacy/', {
       walking: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Walking_withSkin.glb',
       running: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Running_withSkin.glb',
       injured: 'Meshy_AI_Portrait_of_a_Judge_biped_Animation_Injured_Walk_Backward_withSkin.glb',

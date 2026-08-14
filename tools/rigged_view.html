@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>rigged view</title>
+<style>body { margin: 0; background: #2a2e36; overflow: hidden; }</style>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../js/vendor/three.module.js';
+import { GLTFLoader } from '../js/vendor/GLTFLoader.js';
+import { RiggedActor } from '../js/characters/rigged.js';
+
+const q = new URLSearchParams(location.search);
+const CLIP = q.get('clip') || 'walking';
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a2e36);
+const cam = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 100);
+scene.add(new THREE.HemisphereLight(0xcfd6dd, 0x44503f, 1.1));
+const sun = new THREE.DirectionalLight(0xfff0dd, 1.5);
+sun.position.set(3, 6, 5);
+scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x3a3f47 }));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const DIR = '../assets/models/characters/rigged/wargrave/';
+const files = {
+  body: 'Magistrate_body.glb',
+  walking: 'Magistrate_walk.glb',
+  dozing: 'Magistrate_idle_dozing.glb',
+  talk: 'Magistrate_idle_talk.glb',
+  running: 'Magistrate_run.glb',
+  dying: 'Magistrate_dying.glb',
+};
+const a = await RiggedActor.load(DIR, files, { trueTexture: true });
+// 借坐（同 npc.js：借 lombard Chair_Sit_Idle_M，body 为宿主）
+const lg = await new GLTFLoader().loadAsync('../assets/models/characters/rigged/lombard/Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb');
+const host = await new GLTFLoader().loadAsync(DIR + files.body);
+a.addClipModel('Chair_Sit_Idle_M', host.scene, lg.animations[0], { mat: a.donorMat });
+scene.add(a.group);
+a.group.visible = true;
+a.play(CLIP, { loop: CLIP !== 'dying' });
+document.title = 'ready:' + CLIP;
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  a.update(clock.getDelta());
+  renderer.render(scene, cam);
+});
+// 正面机位（行走/待机/坐姿/倒地全景）
+cam.position.set(0, 1.45, 2.6);
+cam.lookAt(0, 0.95, 0);
+window.__cam = cam;
+</script>
+</body>
+</html>

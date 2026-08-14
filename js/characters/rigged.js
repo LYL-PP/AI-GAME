@@ -28,7 +28,8 @@ function smoothNormalsByPosition(geo) {
 
 export class RiggedActor {
   // files: { name: fileName }；tint：剪影材质色（黑袍 #1a1a20 系）；trackKey：加载页进度跟踪键（整角色聚合）
-  static async load(dir, files, { tint = 0x1a1a20, trackKey = null } = {}) {
+  // trueTexture：真贴图路径——files.body 为贴图供体（先载），其余 clip 模型复用其材质克隆（共享贴图，各自 opacity 供淡入淡出）
+  static async load(dir, files, { tint = 0x1a1a20, trackKey = null, trueTexture = false } = {}) {
     const a = new RiggedActor();
     a.group = new THREE.Group();
     a.items = {};
@@ -43,14 +44,8 @@ export class RiggedActor {
       for (const k in prog) s += prog[k];
       LoadTracker.progress(trackKey, s, 0);
     };
-    await Promise.all(Object.entries(files).map(async ([name, file]) => {
-      prog[name] = 0;
-      const g = await loadGLB(dir + file, null, trackKey ? (loaded, total) => {
-        prog[name] = Math.max(prog[name] || 0, total || loaded);
-        bump();
-      } : null);
+    const addItem = (name, g, mat) => {
       const root = g.scene;
-      const mat = new THREE.MeshLambertMaterial({ color: tint, emissive: 0x111116, transparent: true, opacity: 0 });
       root.traverse((o) => {
         if (o.isMesh) {
           smoothNormalsByPosition(o.geometry);
@@ -65,19 +60,48 @@ export class RiggedActor {
       root.visible = false;
       a.group.add(root);
       a.items[name] = { root, mat, mixer, action };
+    };
+    if (trueTexture) {
+      const bodyEntry = Object.entries(files).find(([n]) => n === 'body');
+      if (!bodyEntry) throw new Error('trueTexture 需要 files.body 作为贴图供体');
+      prog.body = 0;
+      const bg = await loadGLB(dir + bodyEntry[1], null, trackKey ? (l, t) => { prog.body = Math.max(prog.body, t || l); bump(); } : null);
+      let donor = null;
+      bg.scene.traverse((o) => { if (o.isMesh && !donor) donor = o.material; });
+      if (!donor) throw new Error('trueTexture 供体无材质');
+      a.donorMat = donor;   // 供体材质（addClipModel 借用时克隆源）
+      addItem('body', bg, donor.clone());
+      a.items.body.mat.transparent = true;
+      const rest = Object.entries(files).filter(([n]) => n !== 'body');
+      await Promise.all(rest.map(async ([name, file]) => {
+        prog[name] = 0;
+        const g = await loadGLB(dir + file, null, trackKey ? (l, t) => { prog[name] = Math.max(prog[name] || 0, t || l); bump(); } : null);
+        const m = donor.clone();
+        m.transparent = true; m.opacity = 0;
+        addItem(name, g, m);
+      }));
+      return a;
+    }
+    await Promise.all(Object.entries(files).map(async ([name, file]) => {
+      prog[name] = 0;
+      const g = await loadGLB(dir + file, null, trackKey ? (l, t) => { prog[name] = Math.max(prog[name] || 0, t || l); bump(); } : null);
+      const mat = new THREE.MeshLambertMaterial({ color: tint, emissive: 0x111116, transparent: true, opacity: 0 });
+      addItem(name, g, mat);
     }));
     return a;
   }
 
   has(name) { return !!this.items[name]; }
 
-  // 追加独立模型实例 + 外来 clip（同骨架重定向借用；材质为占位，applyPortraitProjection 统一替换）
-  addClipModel(name, root, clip, { tint = 0x1a1a20 } = {}) {
-    const mat = new THREE.MeshLambertMaterial({ color: tint, emissive: 0x111116, transparent: true, opacity: 0 });
+  // 追加独立模型实例 + 外来 clip（同骨架重定向借用）
+  // 默认 tint 剪影占位材质（applyPortraitProjection 统一替换）；opts.mat 给真贴图路径（克隆供体材质）
+  addClipModel(name, root, clip, { tint = 0x1a1a20, mat = null } = {}) {
+    const useMat = mat ? mat.clone() : new THREE.MeshLambertMaterial({ color: tint, emissive: 0x111116, transparent: true, opacity: 0 });
+    if (mat) { useMat.transparent = true; useMat.opacity = 0; }
     root.traverse((o) => {
       if (o.isMesh) {
         smoothNormalsByPosition(o.geometry);
-        o.material = mat;
+        o.material = useMat;
         o.frustumCulled = false;
         o.castShadow = false;
         o.receiveShadow = false;
@@ -87,7 +111,7 @@ export class RiggedActor {
     const action = mixer.clipAction(clip);
     root.visible = false;
     this.group.add(root);
-    this.items[name] = { root, mat, mixer, action };
+    this.items[name] = { root, mat: useMat, mixer, action };
   }
 
   // 正面平面投影贴图（绑定空间 XY 投影；正面油画质感，背面暗色罩染）
