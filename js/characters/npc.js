@@ -6,10 +6,10 @@ import { KenneyLib } from './kenney.js';
 import { RiggedActor } from './rigged.js';
 import { LoadTracker } from '../loadProgress.js';
 
-// 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-07 实测实际加载文件和）
+// 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-08 真贴图新版实测加载文件和）
 const RIGGED_EST_MB = {
-  wargrave: 2.4, marston: 1.3, vera: 1.1, mrs_rogers: 1.3, brent: 0.7,
-  rogers: 0.6, blore: 0.6, macarthur: 0.5, armstrong: 1.3, lombard: 1.1,
+  wargrave: 2.4, marston: 4.3, vera: 3.8, mrs_rogers: 3.2, brent: 0.7,
+  rogers: 3.3, blore: 0.6, macarthur: 4.2, armstrong: 1.3, lombard: 1.1,
 };
 
 // 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
@@ -29,38 +29,38 @@ const RIGGED_DEFS = {
   },
   marston: {
     dir: 'assets/models/characters/rigged/marston/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Ivory 象牙白西装，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Casual_Walk: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Casual_Walk_withSkin.glb',
-      Idle_3: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Idle_3_withSkin.glb',
-      Sitting_Answering_Questions: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Sitting_Answering_Questions_withSkin.glb',
-      Dead: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Dead_withSkin.glb',
-      Running: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Running_withSkin.glb',
-      Lean_Forward_Sprint: 'Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Lean_Forward_Sprint_inplace_withSkin.glb',
+      body: 'Ivory_body.glb',               // 真贴图供体（clip0 静态；兼 death 借用宿主）
+      walking: 'Ivory_walk.glb',
+      idle2: 'Ivory_idle.glb',
+      sitting: 'Ivory_sit.glb',
     },
-    idle: 'Idle_3', idleTS: 1.0, walk: 'Casual_Walk', walkTS: 1.0,
-    sit: 'Sitting_Answering_Questions', death: 'Dead',
+    idle: 'idle2', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: 'dying',   // dying：新包无死亡 clip，借 legacy 旧包 Dead 重定向（NPCManager.create 内装配）
   },
   vera: {
     dir: 'assets/models/characters/rigged/vera/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Governess 女教师，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking_Woman: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Walking_Woman_withSkin.glb',
-      Idle_12: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Idle_12_withSkin.glb',
-      Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
-      Running: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Running_withSkin.glb',
-      punch: 'Meshy_AI_The_Quiet_Gaze_biped_Animation_Face_Punch_Reaction_2_withSkin.glb',   // 借出：ch9 隆巴德受击
+      body: 'Governess_body.glb',           // 真贴图供体（clip0 静态；兼 ch9 戒备借用宿主）
+      walking: 'Governess_walk.glb',
+      idle3: 'Governess_idle.glb',
+      sitting: 'Governess_sit.glb',
     },
-    idle: 'Idle_12', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_F', death: null,
+    idle: 'idle3', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
   mrs_rogers: {
     dir: 'assets/models/characters/rigged/mrs_rogers/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Housekeeper 女管家，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking_Woman: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Walking_Woman_withSkin.glb',
-      Idle_3: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Idle_3_withSkin.glb',
-      Chair_Sit_Idle_F: 'Meshy_AI_The_Quiet_Housemaid_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+      body: 'Housekeeper_body.glb',         // 真贴图供体（clip0 静态站姿，兼待机；新包无独立 idle clip）
+      walking: 'Housekeeper_walk.glb',
+      sitting: 'Housekeeper_sit.glb',
     },
-    idle: 'Idle_3', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_F', death: null,
+    idle: 'body', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
   brent: {
     dir: 'assets/models/characters/rigged/brent/',
@@ -74,13 +74,14 @@ const RIGGED_DEFS = {
   },
   rogers: {
     dir: 'assets/models/characters/rigged/rogers/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Butler 男管家，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Quick_Walk: 'Meshy_AI_Victorian_Gentleman_i_biped_Animation_Quick_Walk_withSkin.glb',
-      Chair_Sit_Idle_M: 'Meshy_AI_Victorian_Gentleman_i_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
-      Character_output: 'Meshy_AI_Victorian_Gentleman_i_biped_Character_output.glb',
+      body: 'Butler_body.glb',              // 真贴图供体（clip0 静态站姿，兼待机）
+      walking: 'Butler_walk.glb',
+      sitting: 'Butler_sit.glb',
     },
-    idle: 'Character_output', idleTS: 1.0, walk: 'Quick_Walk', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_M', death: null,
+    idle: 'body', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
   blore: {
     dir: 'assets/models/characters/rigged/blore/',
@@ -94,14 +95,16 @@ const RIGGED_DEFS = {
   },
   macarthur: {
     dir: 'assets/models/characters/rigged/macarthur/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：General 老将军，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Walking_withSkin.glb',
-      Idle_11: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Idle_11_withSkin.glb',
-      Sit_on_Chair_Arms_Crossed: 'Meshy_AI_Portrait_of_a_Veteran_biped_Animation_Sit_on_Chair_Arms_Crossed_withSkin.glb',
+      body: 'General_body.glb',             // 真贴图供体（clip0 静态）
+      walking: 'General_walk.glb',
+      idle11: 'General_idle.glb',
+      sitting: 'General_sit.glb',
     },
-    idle: 'Idle_11', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
-    sit: 'Sit_on_Chair_Arms_Crossed', death: null,
-    gaze: 'Sit_on_Chair_Arms_Crossed',   // gaze_sea 长椅坐姿（北岬角望海）
+    idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
+    gaze: 'sitting',   // gaze_sea 长椅坐姿（北岬角望海；ch3 死亡现场同 clip 低速冻结+前倾）
   },
   armstrong: {
     dir: 'assets/models/characters/rigged/armstrong/',
@@ -664,18 +667,35 @@ export class NPCManager {
     try {
       const lm = lib.rigged.lombard, vr = lib.rigged.vera;
       if (lm && vr) {
-        const pClip = vr.items.punch?.action?.getClip();
-        if (pClip && !lm.has('punch_react')) {
-          const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.Walking);
-          lm.addClipModel('punch_react', g.scene, pClip);
+        if (!lm.has('punch_react')) {
+          // 新版维拉无受击 clip：直载 legacy 旧包 Face_Punch_Reaction_2 作 clip 供体（Mixamo 同骨架按名绑定）
+          const pg = await new GLTFLoader().loadAsync(RIGGED_DEFS.vera.dir + 'legacy/Meshy_AI_The_Quiet_Gaze_biped_Animation_Face_Punch_Reaction_2_withSkin.glb');
+          const pClip = pg.animations[0];
+          if (pClip) {
+            const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.Walking);
+            lm.addClipModel('punch_react', g.scene, pClip);
+          }
         }
         const hClip = lm.items.parry?.action?.getClip();
         if (hClip && !vr.has('parry_hold')) {
-          const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.vera.dir + RIGGED_DEFS.vera.files.Walking_Woman);
-          vr.addClipModel('parry_hold', g.scene, hClip);
+          const vdef = RIGGED_DEFS.vera;
+          const g = await new GLTFLoader().loadAsync(vdef.dir + (vdef.trueTexture ? vdef.files.body : vdef.files.Walking_Woman));
+          vr.addClipModel('parry_hold', g.scene, hClip, { mat: vr.donorMat || null });
         }
       }
     } catch (e) { console.warn('[rigged] ch9 对峙借用失败', e); }
+    // 马尔斯顿新包无死亡 clip：借 legacy 旧包 Dead 重定向到新 body 宿主（同 Mixamo 骨架；ch1 呛死倒地定格）
+    try {
+      const ma = lib.rigged.marston;
+      if (ma && RIGGED_DEFS.marston.trueTexture && !ma.has('dying')) {
+        const dg = await new GLTFLoader().loadAsync(RIGGED_DEFS.marston.dir + 'legacy/Meshy_AI_Gentleman_in_a_Cream__biped_Animation_Dead_withSkin.glb');
+        const dClip = dg.animations[0];
+        if (dClip) {
+          const host = await new GLTFLoader().loadAsync(RIGGED_DEFS.marston.dir + RIGGED_DEFS.marston.files.body);
+          ma.addClipModel('dying', host.scene, dClip, { mat: ma.donorMat || null });
+        }
+      }
+    } catch (e) { console.warn('[rigged marston] 借用死亡 clip 失败，ch1 回退组变换俯卧', e); }
     // 统一立绘投影材质（含借用模型；真贴图角色跳过——模型自带材质）
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
       const rig = lib.rigged[id];

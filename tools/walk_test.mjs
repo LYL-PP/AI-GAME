@@ -123,10 +123,13 @@ const TEST = `(async () => {
 async function main() {
   let wsUrl;
   for (let i = 0; i < 40 && !wsUrl; i++) {
-    try {
-      const list = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
-      wsUrl = list.find((t) => t.type === 'page')?.webSocketDebuggerUrl;
-    } catch {}
+    for (const host of ['localhost', '127.0.0.1']) {
+      if (wsUrl) break;
+      try {
+        const list = await (await fetch(`http://${host}:${PORT}/json/list`)).json();
+        wsUrl = list.find((t) => t.type === 'page')?.webSocketDebuggerUrl;
+      } catch {}
+    }
     if (!wsUrl) await sleep(500);
   }
   ws = new WebSocket(wsUrl);

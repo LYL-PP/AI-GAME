@@ -1,2 +1,6 @@
-Meshy AI · CC BY 4.0
-Portrait of a Veteran (biped) — https://www.meshy.ai
+The Decorated Statesm biped models (body / walking / idle / sitting; true-texture version, 2026-08)
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0
+Attribution: Meshy AI, 'The Decorated Statesm biped'
+
+legacy/ 旧投影版：'Portrait of a Veteran biped'
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0

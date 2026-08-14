@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>rigged view2</title>
+<style>body { margin: 0; background: #2a2e36; overflow: hidden; }</style>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.js" } }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../js/vendor/three.module.js';
+import { RiggedActor } from '../js/characters/rigged.js';
+
+// 2026-08 真贴图新版角色（与 npc.js RIGGED_DEFS 同步）
+const BASE = '../assets/models/characters/rigged/';
+const CHARS = {
+  vera:       { files: { body: 'Governess_body.glb',   walking: 'Governess_walk.glb',   idle3: 'Governess_idle.glb',   sitting: 'Governess_sit.glb' } },
+  rogers:     { files: { body: 'Butler_body.glb',      walking: 'Butler_walk.glb',      sitting: 'Butler_sit.glb' } },
+  mrs_rogers: { files: { body: 'Housekeeper_body.glb', walking: 'Housekeeper_walk.glb', sitting: 'Housekeeper_sit.glb' } },
+  macarthur:  { files: { body: 'General_body.glb',     walking: 'General_walk.glb',     idle11: 'General_idle.glb',   sitting: 'General_sit.glb' } },
+  marston:    { files: { body: 'Ivory_body.glb',       walking: 'Ivory_walk.glb',       idle2: 'Ivory_idle.glb',      sitting: 'Ivory_sit.glb' } },
+};
+const q = new URLSearchParams(location.search);
+const ID = q.get('id') || 'vera';
+const CLIP = q.get('clip') || 'walking';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a2e36);
+const cam = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.1, 100);
+scene.add(new THREE.HemisphereLight(0xcfd6dd, 0x44503f, 1.1));
+const sun = new THREE.DirectionalLight(0xfff0dd, 1.5);
+sun.position.set(3, 6, 5);
+scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshLambertMaterial({ color: 0x3a3f47 }));
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+const cfg = CHARS[ID];
+const a = await RiggedActor.load(BASE + ID + '/', cfg.files, { trueTexture: true });
+scene.add(a.group);
+a.group.visible = true;
+a.play(CLIP, { loop: true });
+document.title = 'ready:' + ID + ':' + CLIP;
+
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  a.update(clock.getDelta());
+  renderer.render(scene, cam);
+});
+// 正面机位（模型本地前向 +z，未做 npc.js 的 π 预转，相机放 +z 侧即正脸）
+cam.position.set(0, 1.45, 2.6);
+cam.lookAt(0, 0.95, 0);
+window.__cam = cam;
+</script>
+</body>
+</html>

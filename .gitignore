@@ -1,4 +1,7 @@
 tools/.chrome-profile*/
+tools/.edge-profile*/
+tools/.edge-probe*/
+tools/.tmp*/
 *.log
 .DS_Store
 Thumbs.db
