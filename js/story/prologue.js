@@ -244,10 +244,13 @@ export class Prologue {
     const s = this._playerSeat || seatPos(PLAYER_SEAT);
     this.player.enabled = true;
     this.player.spawn(s.x, s.z + 0.9, Math.atan2(-(TABLE.x - s.x), -(TABLE.z - s.z)), F1);
-    // 解锁 NPC 日程
+    // 解锁 NPC 日程（有起身过渡 clip 的骨骼角色：先播 Sit_to_Stand 再解锁；昏倒/无 clip 者照旧即解锁；5s 兜底防卡死）
     for (const id of NPC_ORDER) {
       const npc = this.mgr.get(id);
-      if (npc) npc.prologueLock = false;
+      if (!npc) continue;
+      if (npc.rigged && npc.seated && !npc.lying && npc.standUpAnimated(() => { npc.prologueLock = false; })) {
+        setTimeout(() => { npc.prologueLock = false; }, 5000);
+      } else npc.prologueLock = false;
     }
     this.mgr.setLabelsVisible(true);
     this.movers.clear();
@@ -310,7 +313,7 @@ export class Prologue {
       m.timeout -= dt;
       if (m.timeout <= 0) { // 超时降级：瞬移
         npc.walking = false;
-        if (m.seat) { npc.place(m.seat.x, F1, m.seat.z, m.seat.yaw); npc.setAction('sit'); }
+        if (m.seat) npc.sitDownAnimated(m.seat.x, F1, m.seat.z, m.seat.yaw);
         m.then?.();
         this.movers.delete(id);
         continue;
@@ -318,7 +321,7 @@ export class Prologue {
       const tp = route[m.idx];
       if (!tp) {
         npc.walking = false;
-        if (m.seat) { npc.place(m.seat.x, F1, m.seat.z, m.seat.yaw); npc.setAction('sit'); }
+        if (m.seat) npc.sitDownAnimated(m.seat.x, F1, m.seat.z, m.seat.yaw);
         m.then?.();
         this.movers.delete(id);
         continue;

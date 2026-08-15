@@ -1,12 +1,13 @@
 // dialogue.js —— 对话树播放器：data/dialogue.json (node/choices)
 // 支持 requireClue（window.ClueAPI?.has）、flag 写入存档、suspect_reaction 暂存
 export class DialoguePlayer {
-  // opts: { data, save, getChapter, portraits: {id→file}, onClose }
+  // opts: { data, save, getChapter, portraits: {id→file}, onStart(npcId), onClose }
   constructor(opts) {
     this.data = opts.data;         // dialogue.json 内容
     this.save = opts.save;
     this.getChapter = opts.getChapter;
     this.portraits = opts.portraits || {};
+    this.onStart = opts.onStart || null;   // 对话成功打开时回调（对话手势钩子）
     this.onClose = opts.onClose || (() => {});
     this.el = {
       box: document.getElementById('dlgBox'),
@@ -58,6 +59,7 @@ export class DialoguePlayer {
         this._openUi(npcId);
         this.save.addSuspectReaction(npcId, rn.id, rn.text);
         this.goto(rn.id);
+        this.onStart?.(npcId);   // 对话手势（once；无 clip 静默跳过）
         return true;
       }
     }
@@ -67,6 +69,7 @@ export class DialoguePlayer {
     this.nodeMap = new Map(nodes.map((n) => [n.id, n]));
     this._openUi(npcId);
     this.goto(nodes[0].id);
+    this.onStart?.(npcId);   // 对话手势（once；无 clip 静默跳过）
     return true;
   }
 

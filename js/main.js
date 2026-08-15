@@ -279,6 +279,7 @@ async function boot() {
       save,
       getChapter: () => weather.getChapter(),
       portraits,
+      onStart: (npcId) => { npcManager?.get(npcId)?.playGesture?.(); },   // 对话开始时播一次手势 clip（rigged 且配置了 gesture 的角色）
       onClose: () => { if (!playMode) renderer.domElement.requestPointerLock(); },
     });
     const prologue = new Prologue({

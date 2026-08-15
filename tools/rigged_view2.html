@@ -17,12 +17,12 @@ const CHARS = {
   vera:       { files: { body: 'Governess_body.glb',   walking: 'Governess_walk.glb',   idle3: 'Governess_idle.glb',   sitting: 'Governess_sit.glb' } },
   rogers:     { files: { body: 'Butler_body.glb',      walking: 'Butler_walk.glb',      sitting: 'Butler_sit.glb' } },
   mrs_rogers: { files: { body: 'Housekeeper_body.glb', walking: 'Housekeeper_walk.glb', sitting: 'Housekeeper_sit.glb' } },
-  macarthur:  { files: { body: 'General_body.glb',     walking: 'General_walk.glb',     idle11: 'General_idle.glb',   sitting: 'General_sit.glb' } },
-  marston:    { files: { body: 'Ivory_body.glb',       walking: 'Ivory_walk.glb',       idle2: 'Ivory_idle.glb',      sitting: 'Ivory_sit.glb' } },
-  lombard:    { files: { body: 'Hunter_body.glb',      walking: 'Hunter_walk.glb',      idle2: 'Hunter_idle.glb',     sitting: 'Hunter_sit.glb', parry: 'Hunter_alert.glb' } },
-  armstrong:  { files: { body: 'Anxious_body.glb',     walking: 'Anxious_walk.glb',     idle11: 'Anxious_idle.glb',   sitting: 'Anxious_sit.glb' } },
-  blore:      { files: { body: 'Bowler_body.glb',      walking: 'Bowler_walk.glb',      idle11: 'Bowler_idle.glb',    sitting: 'Bowler_sit.glb' } },
-  brent:      { files: { body: 'Widow_body.glb',       walking: 'Widow_walk.glb',       idle9: 'Widow_idle.glb',      sitting: 'Widow_sit.glb' } },
+  macarthur:  { files: { body: 'General_body.glb',     walking: 'General_walk.glb',     idle11: 'General_idle.glb',   sitting: 'General_sit.glb', gesture: 'General_gesture.glb' } },
+  marston:    { files: { body: 'Ivory_body.glb',       walking: 'Ivory_walk.glb',       idle2: 'Ivory_idle.glb',      sitting: 'Ivory_sit.glb', stand_up: 'Ivory_stand_up.glb' } },
+  lombard:    { files: { body: 'Hunter_body.glb',      walking: 'Hunter_walk.glb',      idle2: 'Hunter_idle.glb',     sitting: 'Hunter_sit.glb', parry: 'Hunter_alert.glb', sit_down: 'Hunter_sit_down.glb', stand_up: 'Hunter_stand_up.glb' } },
+  armstrong:  { files: { body: 'Anxious_body.glb',     walking: 'Anxious_walk.glb',     idle11: 'Anxious_idle.glb',   sitting: 'Anxious_sit.glb', sit_down: 'Anxious_sit_down.glb', crisis: 'Anxious_crisis.glb' } },
+  blore:      { files: { body: 'Bowler_body.glb',      walking: 'Bowler_walk.glb',      idle11: 'Bowler_idle.glb',    sitting: 'Bowler_sit.glb', stand_up: 'Bowler_stand_up.glb', gesture: 'Bowler_gesture.glb' } },
+  brent:      { files: { body: 'Widow_body.glb',       walking: 'Widow_walk.glb',       idle9: 'Widow_idle.glb',      sitting: 'Widow_sit.glb', stand_up: 'Widow_stand_up.glb' } },
 };
 const q = new URLSearchParams(location.search);
 const ID = q.get('id') || 'vera';

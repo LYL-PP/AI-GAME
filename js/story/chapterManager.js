@@ -42,6 +42,9 @@ export class ChapterManager {
         m.setAction('idle');
       }
     }
+    // 阿姆斯特朗 ch5 起神经质崩溃：坐姿换 crisis 瘫坐抱头（npc.js update 坐姿分支消费；跳章复活时随 begin 复位）
+    const ar = this.mgr.get('armstrong');
+    if (ar) ar.distress = chapter >= 5;
     // 第 9 章起：沃格雷夫假死现场清理（“尸体”消失）
     if (chapter >= 9) this.deathScenes.cleanup(6);
     this.save.setChapter(chapter);

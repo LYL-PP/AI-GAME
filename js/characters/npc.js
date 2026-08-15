@@ -8,8 +8,8 @@ import { LoadTracker } from '../loadProgress.js';
 
 // 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-08 真贴图新版实测加载文件和）
 const RIGGED_EST_MB = {
-  wargrave: 2.4, marston: 4.3, vera: 3.8, mrs_rogers: 3.2, brent: 3.1,
-  rogers: 3.3, blore: 4.2, macarthur: 4.2, armstrong: 3.0, lombard: 4.1,
+  wargrave: 2.4, marston: 5.0, vera: 3.8, mrs_rogers: 3.2, brent: 3.8,
+  rogers: 3.3, blore: 5.7, macarthur: 4.9, armstrong: 3.9, lombard: 5.2,
 };
 
 // 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
@@ -26,6 +26,7 @@ const RIGGED_DEFS = {
       dying: 'Magistrate_dying.glb',
     },
     idle: 'dozing', idleTS: 1.0, walk: 'walking', walkTS: 1.0, sit: 'Chair_Sit_Idle_M', death: 'dying',
+    gesture: 'talk',   // 对话手势（Talk_with_Right_Hand_Open 法官主持腔，once）
   },
   marston: {
     dir: 'assets/models/characters/rigged/marston/',
@@ -35,6 +36,7 @@ const RIGGED_DEFS = {
       walking: 'Ivory_walk.glb',
       idle2: 'Ivory_idle.glb',
       sitting: 'Ivory_sit.glb',
+      stand_up: 'Ivory_stand_up.glb',       // 起身过渡（Sit_to_Stand；指控散场 once）
     },
     idle: 'idle2', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
     sit: 'sitting', death: 'dying',   // dying：新包无死亡 clip，借 legacy 旧包 Dead 重定向（NPCManager.create 内装配）
@@ -70,6 +72,7 @@ const RIGGED_DEFS = {
       walking: 'Widow_walk.glb',
       idle9: 'Widow_idle.glb',
       sitting: 'Widow_sit.glb',
+      stand_up: 'Widow_stand_up.glb',       // 起身过渡（Sit_to_Stand；指控散场 once）
     },
     idle: 'idle9', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
     sit: 'sitting', death: null,
@@ -93,9 +96,12 @@ const RIGGED_DEFS = {
       walking: 'Bowler_walk.glb',
       idle11: 'Bowler_idle.glb',
       sitting: 'Bowler_sit.glb',
+      stand_up: 'Bowler_stand_up.glb',      // 起身过渡（Sit_to_Stand；指控散场 once）
+      gesture: 'Bowler_gesture.glb',        // 对话手势（Look_Around_Dumbfounded 多疑四顾，once）
     },
     idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
     sit: 'sitting', death: null,
+    gesture: 'gesture',   // 对话手势（Look_Around_Dumbfounded 多疑四顾，once）
   },
   macarthur: {
     dir: 'assets/models/characters/rigged/macarthur/',
@@ -105,10 +111,12 @@ const RIGGED_DEFS = {
       walking: 'General_walk.glb',
       idle11: 'General_idle.glb',
       sitting: 'General_sit.glb',
+      gesture: 'General_gesture.glb',       // 对话手势（Listening_Gesture 倾听，once）
     },
     idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
     sit: 'sitting', death: null,
     gaze: 'sitting',   // gaze_sea 长椅坐姿（北岬角望海；ch3 死亡现场同 clip 低速冻结+前倾）
+    gesture: 'gesture',   // 对话手势（Listening_Gesture 倾听，once）
   },
   armstrong: {
     dir: 'assets/models/characters/rigged/armstrong/',
@@ -118,6 +126,8 @@ const RIGGED_DEFS = {
       walking: 'Anxious_walk.glb',
       idle11: 'Anxious_idle.glb',
       sitting: 'Anxious_sit.glb',
+      sit_down: 'Anxious_sit_down.glb',     // 入座过渡（Stand_to_Sit；prologue 入座 once）
+      crisis: 'Anxious_crisis.glb',         // ch5+ 崩溃神态（Sit_Hands_on_Head_Lean_Back；坐姿时替换 sit）
       // dying 不注册：新包无死亡 clip；ch7 借 legacy dying_backwards 重定向（NPCManager.create 内装配，键名仍 'dying'）
     },
     idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
@@ -131,6 +141,8 @@ const RIGGED_DEFS = {
       walking: 'Hunter_walk.glb',
       idle2: 'Hunter_idle.glb',
       sitting: 'Hunter_sit.glb',
+      sit_down: 'Hunter_sit_down.glb',      // 入座过渡（Stand_to_Sit；prologue 入座 once）
+      stand_up: 'Hunter_stand_up.glb',      // 起身过渡（Sit_to_Stand；指控散场 once）
       // parry 不注册：新包 Alert_Quick_Turn_Right 为 2.8s 转身 clip，循环播放鬼畜（已试拍否决）；
       // ch9 戒备改借 legacy Two_Handed_Parry 重定向（NPCManager.create 内装配，键名仍 'parry'）
     },
@@ -431,6 +443,39 @@ export class NPC {
     this.reaction = { type, t: 0, dur };
   }
 
+  // once clip 播放（过渡/手势）：置 _oncePlaying 标记，update 待机分支豁免；播完 onDone 清除。clip 缺失静默跳过
+  _playOnce(key, onDone) {
+    if (!this.rigged || !this.rigged.has(key)) return false;
+    this._oncePlaying = key;
+    this.rigged.playOnce(key, { timeScale: 1.2, onDone: () => { this._oncePlaying = null; onDone?.(); } });
+    return true;
+  }
+
+  // 对话手势（rigCfg.gesture：wargrave=talk 主持腔 / blore=四顾 / macarthur=倾听）
+  // 仅站姿待机时播：坐姿/长椅（gaze）/行走/昏倒/死亡时跳过——站姿手势 clip 会把坐姿模型顶离椅面
+  playGesture() {
+    const g = this.rigCfg?.gesture;
+    if (!g || !this.rigged || this.dead || this.lying || this.walking) return;
+    const cur = this.rigged.currentName;
+    if (this.seated || cur === this.rigCfg.sit || cur === this.rigCfg.gaze) return;
+    this._playOnce(g);
+  }
+
+  // 入座过渡（prologue 晚餐）：有 Stand_to_Sit clip 则 once 过渡，播完由 update 坐姿分支接 sit clip；无则照旧瞬切
+  sitDownAnimated(x, y, z, yaw) {
+    this.place(x, y, z, yaw);
+    this.setAction('sit');
+    if (this.rigged) this._playOnce('sit_down');
+  }
+
+  // 起身过渡（指控散场）：Sit_to_Stand once；播完 onDone（调用方在此解锁日程）。仅坐姿且非躺卧时生效
+  standUpAnimated(onDone) {
+    if (!this.rigged || !this.seated || this.lying) return false;
+    this.seated = false;
+    this.action = 'idle';
+    return this._playOnce('stand_up', onDone);
+  }
+
   update(dt, t) {
     this._t += dt;
     const tt = this._t;
@@ -448,6 +493,8 @@ export class NPC {
       this.rigged.update(dt);
       // 死亡 clip 播放期间不干预（否则会被待机分支覆盖）
       if (this.dead || this.rigged.currentName === rc.death) return;
+      // once clip（入座/起身过渡、对话手势）播放期间不被待机分支顶回；playOnce onDone 清除标记
+      if (this._oncePlaying && !this.walking) return;
       if (this.walking) {
         if (this.rigged.currentName !== rc.walk) this.rigged.play(rc.walk, { timeScale: rc.walkTS });
         else this.rigged.current.action.timeScale = rc.walkTS;
@@ -455,7 +502,10 @@ export class NPC {
         // 望海长椅坐姿（macarthur 北岬角；低速循环）
         if (this.rigged.currentName !== rc.gaze) this.rigged.play(rc.gaze, { timeScale: 0.5 });
       } else if (this.seated && rc.sit) {
-        if (this.rigged.currentName !== rc.sit) this.rigged.play(rc.sit, { timeScale: 0.6 });
+        // 阿姆斯特朗 ch5+ 崩溃：坐姿换 crisis 瘫坐抱头（distress 由 chapterManager.begin 置位）
+        const crisis = this.distress && this.rigged.has('crisis');
+        const want = crisis ? 'crisis' : rc.sit;
+        if (this.rigged.currentName !== want) this.rigged.play(want, { timeScale: crisis ? 1.0 : 0.6 });
       } else if (this.rigged.currentName !== rc.idle) {
         this.rigged.play(rc.idle, { timeScale: rc.idleTS });
       } else {

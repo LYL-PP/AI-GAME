@@ -195,6 +195,18 @@ export class RiggedActor {
     return it.action;
   }
 
+  // once 播放（LoopOnce 停在末帧；onDone 在 finished 时回调一次）——过渡/手势 clip 用
+  playOnce(name, { fade = 0.25, timeScale = 1, onDone = null } = {}) {
+    const it = this.items[name];
+    if (!it) return null;
+    const act = this.play(name, { loop: false, fade, timeScale });
+    if (act && onDone) {
+      const cb = (e) => { if (e.action === act) { it.mixer.removeEventListener('finished', cb); onDone(); } };
+      it.mixer.addEventListener('finished', cb);
+    }
+    return act;
+  }
+
   // 朝目标方向缓转（dx,dz 为期望前进方向）
   face(dx, dz, dt, rate = 7) {
     const target = Math.atan2(dx, dz) + this.faceOffset;
