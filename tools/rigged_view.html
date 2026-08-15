@@ -40,7 +40,7 @@ const files = {
 };
 const a = await RiggedActor.load(DIR, files, { trueTexture: true });
 // 借坐（同 npc.js：借 lombard Chair_Sit_Idle_M，body 为宿主）
-const lg = await new GLTFLoader().loadAsync('../assets/models/characters/rigged/lombard/Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb');
+const lg = await new GLTFLoader().loadAsync('../assets/models/characters/rigged/lombard/legacy/Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb');
 const host = await new GLTFLoader().loadAsync(DIR + files.body);
 a.addClipModel('Chair_Sit_Idle_M', host.scene, lg.animations[0], { mat: a.donorMat });
 scene.add(a.group);

@@ -9,7 +9,7 @@ import { LoadTracker } from '../loadProgress.js';
 // 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-08 真贴图新版实测加载文件和）
 const RIGGED_EST_MB = {
   wargrave: 2.4, marston: 4.3, vera: 3.8, mrs_rogers: 3.2, brent: 0.7,
-  rogers: 3.3, blore: 0.6, macarthur: 4.2, armstrong: 1.3, lombard: 1.1,
+  rogers: 3.3, blore: 0.6, macarthur: 4.2, armstrong: 1.3, lombard: 4.1,
 };
 
 // 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
@@ -121,16 +121,17 @@ const RIGGED_DEFS = {
   },
   lombard: {
     dir: 'assets/models/characters/rigged/lombard/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Hunter 猎装探险家，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking: 'Meshy_AI_Rugged_Explorer_biped_Animation_Walking_withSkin.glb',
-      Idle_02: 'Meshy_AI_Rugged_Explorer_biped_Animation_Idle_02_withSkin.glb',
-      Chair_Sit_Idle_M: 'Meshy_AI_Rugged_Explorer_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
-      Running: 'Meshy_AI_Rugged_Explorer_biped_Animation_Running_withSkin.glb',
-      parry: 'Meshy_AI_Rugged_Explorer_biped_Animation_Two_Handed_Parry_withSkin.glb',       // ch9 持枪戒备
-      sprint: 'Meshy_AI_Rugged_Explorer_biped_Animation_Lean_Forward_Sprint_withSkin.glb',   // 备用
+      body: 'Hunter_body.glb',              // 真贴图供体（clip0 静态；兼 parry 借用宿主）
+      walking: 'Hunter_walk.glb',
+      idle2: 'Hunter_idle.glb',
+      sitting: 'Hunter_sit.glb',
+      // parry 不注册：新包 Alert_Quick_Turn_Right 为 2.8s 转身 clip，循环播放鬼畜（已试拍否决）；
+      // ch9 戒备改借 legacy Two_Handed_Parry 重定向（NPCManager.create 内装配，键名仍 'parry'）
     },
-    idle: 'Idle_02', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_M', death: null,
+    idle: 'idle2', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
 };
 
@@ -652,17 +653,29 @@ export class NPCManager {
       }
       if (track) LoadTracker.done(key);
     }
-    // 沃格雷夫无原生坐姿 clip：借隆巴德同骨架 Chair_Sit_Idle_M 重定向
+    // 沃格雷夫无原生坐姿 clip：借隆巴德同骨架坐姿 clip 重定向
     // （两者 26/26 节点、24/24 动画轨道同名，clip 可直接按名绑定；真贴图版以 body 为宿主、供体材质克隆）
     try {
       const wg = lib.rigged.wargrave, lm = lib.rigged.lombard;
-      const clip = lm?.items.Chair_Sit_Idle_M?.action?.getClip();
+      const clip = lm?.items[RIGGED_DEFS.lombard.sit]?.action?.getClip();
       if (wg && clip && !wg.has('Chair_Sit_Idle_M')) {
         const wdef = RIGGED_DEFS.wargrave;
         const g = await new GLTFLoader().loadAsync(wdef.dir + (wdef.trueTexture ? wdef.files.body : wdef.files.walking));
         wg.addClipModel('Chair_Sit_Idle_M', g.scene, clip, { mat: wg.donorMat || null });
       }
     } catch (e) { console.warn('[rigged wargrave] 借用坐姿失败，维持站姿下沉', e); }
+    // 隆巴德新包无持枪戒备 clip：借 legacy 旧包 Two_Handed_Parry 重定向到新 body 宿主（须在 ch9 借用之前，vera parry_hold 依赖它）
+    try {
+      const lm0 = lib.rigged.lombard;
+      if (lm0 && RIGGED_DEFS.lombard.trueTexture && !lm0.has('parry')) {
+        const pg = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + 'legacy/Meshy_AI_Rugged_Explorer_biped_Animation_Two_Handed_Parry_withSkin.glb');
+        const pClip = pg.animations[0];
+        if (pClip) {
+          const host = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.body);
+          lm0.addClipModel('parry', host.scene, pClip, { mat: lm0.donorMat || null });
+        }
+      }
+    } catch (e) { console.warn('[rigged lombard] 借用戒备 clip 失败，ch9 回退 idle', e); }
     // ch9 海滩对峙借用（同骨架）：隆巴德←维拉受击反应；维拉←隆巴德持枪戒备
     try {
       const lm = lib.rigged.lombard, vr = lib.rigged.vera;
@@ -672,8 +685,8 @@ export class NPCManager {
           const pg = await new GLTFLoader().loadAsync(RIGGED_DEFS.vera.dir + 'legacy/Meshy_AI_The_Quiet_Gaze_biped_Animation_Face_Punch_Reaction_2_withSkin.glb');
           const pClip = pg.animations[0];
           if (pClip) {
-            const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.Walking);
-            lm.addClipModel('punch_react', g.scene, pClip);
+            const g = await new GLTFLoader().loadAsync(RIGGED_DEFS.lombard.dir + RIGGED_DEFS.lombard.files.walking);
+            lm.addClipModel('punch_react', g.scene, pClip, { mat: lm.donorMat || null });
           }
         }
         const hClip = lm.items.parry?.action?.getClip();
