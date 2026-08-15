@@ -1,2 +1,6 @@
-Meshy AI · CC BY 4.0
-The Melancholy Victor (biped) — https://www.meshy.ai
+The Anxious Gentleman biped models (body / walking / idle / sitting; true-texture version, 2026-08)
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0
+Attribution: Meshy AI, 'The Anxious Gentleman biped'
+
+legacy/ 旧投影版：'The Melancholy Victor biped'
+Generated with Meshy AI (https://www.meshy.ai) — License: CC BY 4.0

@@ -28,6 +28,9 @@ const PLAN = {
   macarthur:  ['walking', 'idle11', 'sitting'],
   marston:    ['walking', 'idle2', 'sitting'],
   lombard:    ['walking', 'idle2', 'sitting', 'parry'],
+  armstrong:  ['walking', 'idle11', 'sitting'],
+  blore:      ['walking', 'idle11', 'sitting'],
+  brent:      ['walking', 'idle9', 'sitting'],
 };
 async function main() {
   const ids = process.argv.slice(2).filter((x) => PLAN[x]);

@@ -8,8 +8,8 @@ import { LoadTracker } from '../loadProgress.js';
 
 // 各角色骨骼 GLB 体积估算（MB，加载页进度分母用；2026-08 真贴图新版实测加载文件和）
 const RIGGED_EST_MB = {
-  wargrave: 2.4, marston: 4.3, vera: 3.8, mrs_rogers: 3.2, brent: 0.7,
-  rogers: 3.3, blore: 0.6, macarthur: 4.2, armstrong: 1.3, lombard: 4.1,
+  wargrave: 2.4, marston: 4.3, vera: 3.8, mrs_rogers: 3.2, brent: 3.1,
+  rogers: 3.3, blore: 4.2, macarthur: 4.2, armstrong: 3.0, lombard: 4.1,
 };
 
 // 骨骼动画角色配置（dir 相对项目根；idle/walk/sit/death 为 clip 名，null 表示无）
@@ -64,13 +64,15 @@ const RIGGED_DEFS = {
   },
   brent: {
     dir: 'assets/models/characters/rigged/brent/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Widow 丧服寡妇，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking_Woman: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Walking_Woman_withSkin.glb',
-      Idle_3: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Idle_3_withSkin.glb',
-      Chair_Sit_Idle_F: 'Meshy_AI_Mourning_Matriarch_biped_Animation_Chair_Sit_Idle_F_withSkin.glb',
+      body: 'Widow_body.glb',               // 真贴图供体（clip0 静态）
+      walking: 'Widow_walk.glb',
+      idle9: 'Widow_idle.glb',
+      sitting: 'Widow_sit.glb',
     },
-    idle: 'Idle_3', idleTS: 1.0, walk: 'Walking_Woman', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_F', death: null,
+    idle: 'idle9', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
   rogers: {
     dir: 'assets/models/characters/rigged/rogers/',
@@ -85,13 +87,15 @@ const RIGGED_DEFS = {
   },
   blore: {
     dir: 'assets/models/characters/rigged/blore/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Bowler 圆顶礼帽探长，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Walking: 'Meshy_AI_The_Victorian_Gentlem_biped_Animation_Walking_withSkin.glb',
-      Chair_Sit_Idle_M: 'Meshy_AI_The_Victorian_Gentlem_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
-      Character_output: 'Meshy_AI_The_Victorian_Gentlem_biped_Character_output.glb',
+      body: 'Bowler_body.glb',              // 真贴图供体（clip0 静态站姿，兼待机）
+      walking: 'Bowler_walk.glb',
+      idle11: 'Bowler_idle.glb',
+      sitting: 'Bowler_sit.glb',
     },
-    idle: 'Character_output', idleTS: 1.0, walk: 'Walking', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_M', death: null,
+    idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: null,
   },
   macarthur: {
     dir: 'assets/models/characters/rigged/macarthur/',
@@ -108,16 +112,16 @@ const RIGGED_DEFS = {
   },
   armstrong: {
     dir: 'assets/models/characters/rigged/armstrong/',
+    trueTexture: true,   // 真贴图版（2026-08 重做：Anxious 神经质医生，自带材质，不走立绘投影；旧投影版在 legacy/）
     files: {
-      Quick_Walk: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Quick_Walk_withSkin.glb',
-      Dozing_Elderly: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Dozing_Elderly_withSkin.glb',
-      Chair_Sit_Idle_M: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Chair_Sit_Idle_M_withSkin.glb',
-      Running: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Running_withSkin.glb',
-      Walking: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_Walking_withSkin.glb',
-      dying: 'Meshy_AI_The_Melancholy_Victor_biped_Animation_dying_backwards_withSkin.glb',
+      body: 'Anxious_body.glb',             // 真贴图供体（clip0 静态；兼 dying 借用宿主）
+      walking: 'Anxious_walk.glb',
+      idle11: 'Anxious_idle.glb',
+      sitting: 'Anxious_sit.glb',
+      // dying 不注册：新包无死亡 clip；ch7 借 legacy dying_backwards 重定向（NPCManager.create 内装配，键名仍 'dying'）
     },
-    idle: 'Dozing_Elderly', idleTS: 0.8, walk: 'Quick_Walk', walkTS: 1.0,
-    sit: 'Chair_Sit_Idle_M', death: 'dying',
+    idle: 'idle11', idleTS: 1.0, walk: 'walking', walkTS: 1.0,
+    sit: 'sitting', death: 'dying',
   },
   lombard: {
     dir: 'assets/models/characters/rigged/lombard/',
@@ -709,6 +713,18 @@ export class NPCManager {
         }
       }
     } catch (e) { console.warn('[rigged marston] 借用死亡 clip 失败，ch1 回退组变换俯卧', e); }
+    // 阿姆斯特朗新包无死亡 clip：借 legacy 旧包 dying_backwards 重定向到新 body 宿主（同 Mixamo 骨架；ch7 仰面倒下定格）
+    try {
+      const ar = lib.rigged.armstrong;
+      if (ar && RIGGED_DEFS.armstrong.trueTexture && !ar.has('dying')) {
+        const dg = await new GLTFLoader().loadAsync(RIGGED_DEFS.armstrong.dir + 'legacy/Meshy_AI_The_Melancholy_Victor_biped_Animation_dying_backwards_withSkin.glb');
+        const dClip = dg.animations[0];
+        if (dClip) {
+          const host = await new GLTFLoader().loadAsync(RIGGED_DEFS.armstrong.dir + RIGGED_DEFS.armstrong.files.body);
+          ar.addClipModel('dying', host.scene, dClip, { mat: ar.donorMat || null });
+        }
+      }
+    } catch (e) { console.warn('[rigged armstrong] 借用死亡 clip 失败，ch7 回退组变换', e); }
     // 统一立绘投影材质（含借用模型；真贴图角色跳过——模型自带材质）
     for (const [id, def] of Object.entries(RIGGED_DEFS)) {
       const rig = lib.rigged[id];
